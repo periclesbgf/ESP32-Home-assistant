@@ -28,7 +28,7 @@
 // prototipo das funcoes
 esp_err_t gpio_configure(void);
 esp_err_t gpio_dht11_configure(void);
-
+esp_err_t gpio_configure_led_rgb(void);
 
 
 

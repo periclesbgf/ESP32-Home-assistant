@@ -14,6 +14,7 @@
 #include <esp_log.h>
 #include <gpio.h>
 #include <dht11.h>
+#include <led_rgb.h>
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -53,36 +54,106 @@ static void task_user_led_green(void *args)
 }
 */
 
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void configure_led_rgb(led_rgb *colors)
+{
+    colors->red = 0;
+    colors->green = 0;
+    colors->blue = 0;
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void blink_led_rgb(led_rgb *colors)
+{
+    gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, colors->red);
+    gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, colors->green);
+    gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, colors->blue);
+    vTaskDelay(1500/portTICK_PERIOD_MS);
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void set_collor_rgb_red(led_rgb *colors)
+{
+
+    colors->red = 255;
+    colors->green = 0;
+    colors->blue = 0;
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void set_collor_rgb_green(led_rgb *colors)
+{
+
+    colors->red = 0;
+    colors->green = 255;
+    colors->blue = 0;
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void set_collor_rgb_blue(led_rgb *colors)
+{
+
+    colors->red = 0;
+    colors->green = 0;
+    colors->blue = 255;
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
+static void set_collor_rgb_white(led_rgb *colors)
+{
+    colors->red = 255;
+    colors->green = 255;
+    colors->blue = 255;
+}
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ */
 static void task_user_led_RGB(void *args)
 {
-    uint32_t red = 0;
-    uint32_t green = 0;
-    uint32_t blue = 0;
-    gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
-    gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
-    gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
+    led_rgb colors = {};
+
+    configure_led_rgb(&colors);
+
     FOREVER
     {
-        red ^= 1;
-        gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-        red ^= 1;
-        gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
-        green ^= 1;
-        gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-        green ^= 1;
-        gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
-        blue ^= 1;
-        gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-        blue ^= 1;
-        gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
+        set_collor_rgb_red(&colors);
+        blink_led_rgb(&colors);
+        set_collor_rgb_green(&colors);
+        blink_led_rgb(&colors);
+        set_collor_rgb_blue(&colors);
+        blink_led_rgb(&colors);
+        set_collor_rgb_white(&colors);
+        blink_led_rgb(&colors);
     }
 
 }
-
-
 
 /**
  * @brief example
@@ -95,7 +166,7 @@ void app_main(void)
     esp_err_t status = ESP_FAIL;
 
     //função para inicializar o driver
-    status = (gpio_configure() || gpio_dht11_configure());
+    status = (gpio_configure() || gpio_dht11_configure() || gpio_configure_led_rgb());
 
     if(status == ESP_FAIL)
     {
