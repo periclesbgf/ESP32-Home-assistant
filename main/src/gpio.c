@@ -41,28 +41,6 @@ esp_err_t gpio_configure(void)
     return gpio_config(&io_conf);
 }
 
-esp_err_t gpio_dht11_configure(void)
-{
-    ESP_LOGI(tag, "CONFIGURANDO SENSOR TEMPERATURA");
-
-    gpio_config_t io_conf = {};
-
-    //desabilitar interrupção
-    io_conf.intr_type = GPIO_INTR_DISABLE;
-
-    //selecionar o modo dos pinos(output ou input)
-    io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
-
-    //selecionar quais pinos iremos configurar
-    io_conf.pin_bit_mask = ((1<<GPIO_DHT11_PIN));
-
-    //configurar os resistores
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-
-    return gpio_config(&io_conf);
-}
-
 esp_err_t gpio_configure_led_rgb(void)
 {
     ESP_LOGI(tag, "CONFIGURANDO GPIO LED RGB");

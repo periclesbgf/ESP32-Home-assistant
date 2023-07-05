@@ -155,6 +155,15 @@ static void task_user_led_RGB(void *args)
 
 }
 
+static void task_read_temperature(void *args)
+{
+    FOREVER
+    {
+        dth11_read_statistics();
+        vTaskDelay(1500/portTICK_PERIOD_MS);
+    }
+}
+
 /**
  * @brief example
  * 
@@ -166,7 +175,7 @@ void app_main(void)
     esp_err_t status = ESP_FAIL;
 
     //função para inicializar o driver
-    status = (gpio_configure() || gpio_dht11_configure() || gpio_configure_led_rgb());
+    status = (gpio_configure() || gpio_configure_led_rgb() || dht11_configure());
 
     if(status == ESP_FAIL)
     {
@@ -178,9 +187,8 @@ void app_main(void)
         //xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     }
 
-
-
+    xTaskCreatePinnedToCore(task_read_temperature, "task_read_temperature", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(task_user_led, "task_user_led", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(task_user_led_RGB, "task_user_led_RGB", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-    
+
 }
