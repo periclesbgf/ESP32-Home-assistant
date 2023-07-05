@@ -39,7 +39,7 @@ static void task_user_led(void *args)
 
 
 }
-
+/*
 static void task_user_led_green(void *args)
 {
     uint32_t level = 1;
@@ -50,6 +50,36 @@ static void task_user_led_green(void *args)
         level ^= 1;
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
+}
+*/
+
+static void task_user_led_RGB(void *args)
+{
+    uint32_t red = 0;
+    uint32_t green = 0;
+    uint32_t blue = 0;
+    gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
+    gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
+    gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
+    FOREVER
+    {
+        red ^= 1;
+        gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        red ^= 1;
+        gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, red);
+        green ^= 1;
+        gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        green ^= 1;
+        gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, green);
+        blue ^= 1;
+        gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        blue ^= 1;
+        gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, blue);
+    }
+
 }
 
 
@@ -70,9 +100,16 @@ void app_main(void)
     if(status == ESP_FAIL)
     {
         ESP_LOGE(tag, "pin configuration error");
-
+    }
+    else
+    {
+        gpio_set_level(GPIO_USER_GREEN_LED_PIN, 1);
+        //xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     }
 
+
+
     xTaskCreatePinnedToCore(task_user_led, "task_user_led", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-    xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(task_user_led_RGB, "task_user_led_RGB", 1024, NULL, 2, NULL, tskNO_AFFINITY);
+    
 }
