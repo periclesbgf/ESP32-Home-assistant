@@ -16,13 +16,15 @@
 // incluir bibliotecas
 #include <esp_err.h>
 #include <driver/gpio.h>
+#include <dht11.h>
 
 // definir macros
 #define GPIO_DHT11_PIN     GPIO_NUM_5 //Definindo o pino do sensor de temperatura como o GPIO_5 de acordo com o datasheet
 #define GPIO_USER_LED_PIN  GPIO_NUM_2 //Definindo o pino do LED como o GPIO_2 de acordo com o datasheet
-
+#define GPIO_USER_GREEN_LED_PIN  GPIO_NUM_18
 // prototipo das funcoes
 esp_err_t gpio_configure(void);
+esp_err_t gpio_dht11_configure(void);
 
 
 

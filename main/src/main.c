@@ -13,6 +13,7 @@
 #include <freertos/task.h>
 #include <esp_log.h>
 #include <gpio.h>
+#include <dht11.h>
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -39,19 +40,32 @@ static void task_user_led(void *args)
 
 }
 
+static void task_user_led_green(void *args)
+{
+    uint32_t level = 1;
+
+    FOREVER
+    {
+        gpio_set_level(GPIO_USER_GREEN_LED_PIN, level);
+        level ^= 1;
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
+}
+
+
+
 /**
  * @brief example
  * 
  */
 void app_main(void)
 {
-    ESP_LOGI(tag, "Ola");
-    ESP_LOGI(tag, "Size of int %d", sizeof(int));
+    ESP_LOGI(tag, "Initializating...");
 
     esp_err_t status = ESP_FAIL;
 
     //função para inicializar o driver
-    status = gpio_configure();
+    status = (gpio_configure() || gpio_dht11_configure());
 
     if(status == ESP_FAIL)
     {
@@ -60,5 +74,5 @@ void app_main(void)
     }
 
     xTaskCreatePinnedToCore(task_user_led, "task_user_led", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-
+    xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
 }

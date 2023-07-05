@@ -8,14 +8,20 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <gpio.h>
 
 #ifndef _DHT11_H_
 #define _DHT11_H_
 
-int humidity;
-int temp;
+
+typedef struct dht11_t
+{
+    int checksum;
+    int humidity;
+    int temp;
+}dht11_t;
+
+
 
 #endif// _DHT11_H_
 
