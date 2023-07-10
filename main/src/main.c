@@ -15,6 +15,8 @@
 #include <gpio.h>
 #include <dht11.h>
 #include <led_rgb.h>
+#include <dyp.h>
+#include <ky38.h>
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -54,6 +56,7 @@ static void task_user_led_green(void *args)
 }
 */
 
+#if 0
 /**
  * @brief 
  * 
@@ -154,6 +157,7 @@ static void task_user_led_RGB(void *args)
     }
 
 }
+#endif
 
 static void task_read_temperature(void *args)
 {
@@ -161,6 +165,21 @@ static void task_read_temperature(void *args)
     {
         dth11_read_statistics();
         vTaskDelay(1500/portTICK_PERIOD_MS);
+    }
+}
+
+static void task_read_sound(void *args)
+{
+    FOREVER
+    {
+        if(ky38_read_sound() == ESP_OK)
+        {
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+        }
+        else
+        {
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
+        }
     }
 }
 
@@ -175,7 +194,7 @@ void app_main(void)
     esp_err_t status = ESP_FAIL;
 
     //função para inicializar o driver
-    status = (gpio_configure() || gpio_configure_led_rgb() || dht11_configure());
+    status = (gpio_configure() || dht11_configure());
 
     if(status == ESP_FAIL)
     {
@@ -183,12 +202,13 @@ void app_main(void)
     }
     else
     {
-        gpio_set_level(GPIO_USER_GREEN_LED_PIN, 1);
+        gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
         //xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     }
 
     xTaskCreatePinnedToCore(task_read_temperature, "task_read_temperature", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(task_user_led, "task_user_led", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-    xTaskCreatePinnedToCore(task_user_led_RGB, "task_user_led_RGB", 1024, NULL, 2, NULL, tskNO_AFFINITY);
+    //xTaskCreatePinnedToCore(task_user_led_RGB, "task_user_led_RGB", 1024, NULL, 2, NULL, tskNO_AFFINITY);
+    
 
 }

@@ -1,6 +1,6 @@
 /**
  * @file led_rgb.h
- * @author your name (you@domain.com)
+ * @author Péricles Buarque de Gusmão Filho (periclesbgf@gmail.com)
  * @brief 
  * @version 0.1
  * @date 2023-07-05
@@ -20,9 +20,5 @@ typedef struct led_rgb_t
     uint8_t green;
     uint8_t blue;
 }led_rgb;
-
-
-
-
 
 #endif

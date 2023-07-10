@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2023
  * 
  */
-
 #include <dht11.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>

@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2023
  *
  */
-
 #include <gpio.h>
 #include <esp_log.h>
 
@@ -41,6 +40,7 @@ esp_err_t gpio_configure(void)
     return gpio_config(&io_conf);
 }
 
+/*
 esp_err_t gpio_configure_led_rgb(void)
 {
     ESP_LOGI(tag, "CONFIGURANDO GPIO LED RGB");
@@ -64,3 +64,4 @@ esp_err_t gpio_configure_led_rgb(void)
 
     return gpio_config(&io_conf);
 }
+*/
