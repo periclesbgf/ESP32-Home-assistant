@@ -17,6 +17,7 @@
 #include <led_rgb.h>
 #include <dyp.h>
 #include <ky38.h>
+#include <driver/IRremote.h>
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -37,7 +38,7 @@ static void task_user_led(void *args)
     {
         gpio_set_level(GPIO_USER_LED_PIN, level);
         level ^= 1;
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        vTaskDelay(1500/portTICK_PERIOD_MS);
     }
 
 
