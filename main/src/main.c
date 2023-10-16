@@ -17,7 +17,6 @@
 #include <led_rgb.h>
 #include <dyp.h>
 #include <ky38.h>
-#include <driver/IRremote.h>
 
 #define LED_PIN 2
 #define FOREVER while(1)
