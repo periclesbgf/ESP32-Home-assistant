@@ -41,7 +41,6 @@ static void task_user_led(void *args)
         vTaskDelay(1500/portTICK_PERIOD_MS);
     }
 
-
 }
 
 /**
