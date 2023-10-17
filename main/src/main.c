@@ -21,6 +21,7 @@
 #define LED_PIN 2
 #define FOREVER while(1)
 
+const uart_port_t uart_num = UART_NUM_1;
 
 static const char *tag = "HomeAssistant";
 
@@ -42,129 +43,25 @@ static void task_user_led(void *args)
 
 
 }
-/*
-static void task_user_led_green(void *args)
-{
-    uint32_t level = 1;
-
-    FOREVER
-    {
-        gpio_set_level(GPIO_USER_GREEN_LED_PIN, level);
-        level ^= 1;
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-    }
-}
-*/
-
-#if 0
-/**
- * @brief 
- * 
- * @param args 
- */
-static void configure_led_rgb(led_rgb *colors)
-{
-    colors->red = 0;
-    colors->green = 0;
-    colors->blue = 0;
-}
 
 /**
  * @brief 
  * 
  * @param args 
  */
-static void blink_led_rgb(led_rgb *colors)
-{
-    gpio_set_level(GPIO_USER_RED_RGB_LED_PIN, colors->red);
-    gpio_set_level(GPIO_USER_GREEN_RGB_LED_PIN, colors->green);
-    gpio_set_level(GPIO_USER_BLUE_RGB_LED_PIN, colors->blue);
-    vTaskDelay(1500/portTICK_PERIOD_MS);
-}
-
-/**
- * @brief 
- * 
- * @param args 
- */
-static void set_collor_rgb_red(led_rgb *colors)
-{
-
-    colors->red = 255;
-    colors->green = 0;
-    colors->blue = 0;
-}
-
-/**
- * @brief 
- * 
- * @param args 
- */
-static void set_collor_rgb_green(led_rgb *colors)
-{
-
-    colors->red = 0;
-    colors->green = 255;
-    colors->blue = 0;
-}
-
-/**
- * @brief 
- * 
- * @param args 
- */
-static void set_collor_rgb_blue(led_rgb *colors)
-{
-
-    colors->red = 0;
-    colors->green = 0;
-    colors->blue = 255;
-}
-
-/**
- * @brief 
- * 
- * @param args 
- */
-static void set_collor_rgb_white(led_rgb *colors)
-{
-    colors->red = 255;
-    colors->green = 255;
-    colors->blue = 255;
-}
-
-/**
- * @brief 
- * 
- * @param args 
- */
-static void task_user_led_RGB(void *args)
-{
-    led_rgb colors = {};
-
-    configure_led_rgb(&colors);
-
-    FOREVER
-    {
-        set_collor_rgb_red(&colors);
-        blink_led_rgb(&colors);
-        set_collor_rgb_green(&colors);
-        blink_led_rgb(&colors);
-        set_collor_rgb_blue(&colors);
-        blink_led_rgb(&colors);
-        set_collor_rgb_white(&colors);
-        blink_led_rgb(&colors);
-    }
-
-}
-#endif
-
 static void task_read_temperature(void *args)
 {
-    FOREVER
+    while(1)
     {
-        dth11_read_statistics();
-        vTaskDelay(1500/portTICK_PERIOD_MS);
+        unsigned char data;
+
+        if (uart_read_bytes(UART_NUM, &data, 1, portMAX_DELAY) > 0) {
+            // representation of T and t
+            if (data == 0x54 || data == 0x74) {
+                dth11_read_statistics();
+                vTaskDelay(1500/portTICK_PERIOD_MS);
+            }
+        }
     }
 }
 
@@ -194,7 +91,7 @@ void app_main(void)
     esp_err_t status = ESP_FAIL;
 
     //função para inicializar o driver
-    status = (gpio_configure() || dht11_configure());
+    status = (gpio_configure() || dht11_configure() || uart_configure());
 
     if(status == ESP_FAIL)
     {
@@ -206,9 +103,6 @@ void app_main(void)
         //xTaskCreatePinnedToCore(task_user_led_green, "task_user_led_green", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     }
 
-    xTaskCreatePinnedToCore(task_read_temperature, "task_read_temperature", 1024, NULL, 2, NULL, tskNO_AFFINITY);
     xTaskCreatePinnedToCore(task_user_led, "task_user_led", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-    //xTaskCreatePinnedToCore(task_user_led_RGB, "task_user_led_RGB", 1024, NULL, 2, NULL, tskNO_AFFINITY);
-    
-
+    xTaskCreatePinnedToCore(task_read_temperature, "task_read_temperature", 4096, NULL, 10, NULL, tskNO_AFFINITY);
 }
