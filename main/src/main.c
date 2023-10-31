@@ -20,9 +20,9 @@
 
 static const char *TAG = "HomeAssistant";
 
-#define I2S_WS 15
+#define I2S_WS GPIO_NUM_3
 #define I2S_SD 13
-#define I2S_SCK 2
+#define I2S_SCK GPIO_NUM_2
 #define I2S_PORT I2S_NUM_0
 #define bufferLen 64
 #define SAMPLE_RATE 44100
@@ -72,7 +72,7 @@ static void init_microphone(void)
             },
         },
     };
-    
+
     ESP_ERROR_CHECK(i2s_channel_init_std_mode(rx_handle, &pdm_rx_cfg));
     ESP_ERROR_CHECK(i2s_channel_enable(rx_handle));
 }
@@ -84,14 +84,13 @@ static void init_microphone(void)
  */
 void i2s_example_pdm_rx_task(void *args)
 {
-    uint32_t *r_buf = (uint32_t *)malloc(bufferLen * sizeof(uint32_t));
-    memset(r_buf, 0, bufferLen * sizeof(uint32_t));
-    assert(r_buf);
-
-    size_t r_bytes = 0;
-
     while (1)
     {
+        uint32_t *r_buf = (uint32_t *)malloc(bufferLen * sizeof(uint32_t));
+        memset(r_buf, 0, bufferLen * sizeof(uint32_t));
+        assert(r_buf);
+
+        size_t r_bytes = 0;
         /* Read i2s data */
         if (i2s_channel_read(rx_handle, r_buf, bufferLen, &r_bytes, portMAX_DELAY) == ESP_OK)
         {
@@ -110,17 +109,12 @@ void i2s_example_pdm_rx_task(void *args)
                 {
                     sample_buff = r_buf[i];
 
-                    if(sample_buff & 0x800000)
-                    {
-                        sample_buff |= 0xff000000;
-                    }
-
                     mean += (sample_buff);
                 }
                 //printf("sample_buff %ld\n-----------------------------------\n", sample_buff);
                 mean /= samples_read;
 
-                printf("mean: %.0f\n", mean);
+                printf("mean: %.0f\n", mean/10000);
             }
         }
         else
@@ -128,8 +122,8 @@ void i2s_example_pdm_rx_task(void *args)
             printf("Read Task: i2s read failed\n");
         }
         vTaskDelay(pdMS_TO_TICKS(100));
+        free(r_buf);
     }
-    free(r_buf);
 }
 /**
  * @brief example
