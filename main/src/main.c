@@ -17,6 +17,11 @@
 #include <led_rgb.h>
 #include <inmp441.h>
 #include <driver/i2s_std.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <wifih.h>
+#include <esp_event.h>
 
 static const char *TAG = "HomeAssistant";
 
@@ -25,7 +30,7 @@ static const char *TAG = "HomeAssistant";
 #define I2S_SCK GPIO_NUM_2
 #define I2S_PORT I2S_NUM_0
 #define bufferLen 64
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 16000
 #define RECORD_TIME (15)
 
 #define LED_PIN 2
@@ -39,7 +44,7 @@ static const char *TAG = "HomeAssistant";
 i2s_chan_handle_t rx_handle = NULL;
 
 size_t bytes_read;
-const int WAVE_HEADER_SIZE = 44;
+const int WAVE_HEADER_SIZE = 16;
 
 /**
  * @brief 
@@ -125,13 +130,24 @@ void i2s_example_pdm_rx_task(void *args)
         free(r_buf);
     }
 }
+
 /**
  * @brief example
  * 
  */
 void app_main(void)
 {
+
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+
+    ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "Initializating...");
+    wifi_init_sta();
+
     gpio_set_level(GPIO_USER_PURPLE_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
 
@@ -139,10 +155,9 @@ void app_main(void)
     gpio_configure();
     ESP_LOGI(TAG, "Initializating Microphone");
     init_microphone();
-    ESP_LOGI(TAG, "Microphone initialized");
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
     //função para inicializar o driver
-    //status = (gpio_configure());
+
     ESP_LOGI(TAG, "Microphone initialized");
 
     i2s_example_pdm_rx_task(15);
