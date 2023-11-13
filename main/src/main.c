@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <wifih.h>
 #include <esp_event.h>
+#include <tcp.h>
 
 static const char *TAG = "HomeAssistant";
 
@@ -154,6 +155,11 @@ void app_main(void)
     esp_err_t status = ESP_FAIL;
     gpio_configure();
     ESP_LOGI(TAG, "Initializating Microphone");
+
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    tcp_client();
+    
     init_microphone();
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
     //função para inicializar o driver
