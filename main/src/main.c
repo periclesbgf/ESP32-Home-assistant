@@ -34,7 +34,7 @@ static const char *TAG = "HomeAssistant";
 #define I2S_PORT I2S_NUM_0
 #define bufferLen 64
 #define SAMPLE_RATE 16000
-#define RECORD_TIME (5)
+#define RECORD_TIME 3
 
 
 #define LED_PIN 2
@@ -154,9 +154,9 @@ void i2s_example_tcp_stream_task(void *args)
 
         bytes_sent += sent_bytes;
         printf("%d\n", bytes_sent);
-        vTaskDelay(pdMS_TO_TICKS(5));
+        vTaskDelay(pdMS_TO_TICKS(6));
     }
-    vTaskDelay(500);
+    vTaskDelay(10);
     close(sock);
     free(r_buf);
 
@@ -196,8 +196,5 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Microfone inicializado");
 
-    xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 8192, NULL, 5, NULL);
-
-
-    //xTaskCreate(i2s_example_wav_record_task, "i2s_example_wav_record_task", 4096, NULL, 5, NULL);
+    xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
 }
