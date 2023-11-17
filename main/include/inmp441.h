@@ -25,7 +25,22 @@
 //#include <driver/i2s_pdm.h>
 #include <driver/spi_common.h>
 
-
+typedef struct
+{
+    uint8_t  chunk_id[4]; // "RIFF" (4 bytes)
+    uint32_t chunk_size;   // Tamanho do arquivo menos 8 bytes (4 bytes)
+    uint8_t  format[4];    // "WAVE" (4 bytes)
+    uint8_t  subchunk1_id[4]; // "fmt " (4 bytes)
+    uint32_t subchunk1_size;  // Tamanho do cabeçalho do formato (16 bytes) (4 bytes)
+    uint16_t audio_format;    // Formato de áudio (1 para PCM) (2 bytes)
+    uint16_t num_channels;    // Número de canais (1 para mono, 2 para estéreo) (2 bytes)
+    uint32_t sample_rate;     // Taxa de amostragem (4 bytes)
+    uint32_t byte_rate;       // Byte rate (número de bytes transmitidos por segundo) (4 bytes)
+    uint16_t block_align;     // Número de bytes para um bloco de amostra, incluindo todos os canais (2 bytes)
+    uint16_t bits_per_sample; // Número de bits por amostra (4 bytes)
+    uint8_t  subchunk2_id[4]; // "data" (4 bytes)
+    uint32_t subchunk2_size;  // Número de bytes nos dados (4 bytes)
+} wav_header_t;
 
 
 #if 0

@@ -21,9 +21,9 @@
 #include "esp_netif.h"
 #include "esp_log.h"
 
-#define HOST_IP_ADDR "server_ip"
-#define PORT port
+#define HOST_IP_ADDR "192.168.1.3"
+#define PORT 12445
 
-void tcp_client(void);
+int tcp_client(void);
 
 #endif
