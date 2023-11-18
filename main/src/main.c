@@ -127,38 +127,42 @@ void i2s_example_tcp_stream_task(void *args)
         vTaskDelete(NULL);
     }
 
-    size_t total_samples = SAMPLE_RATE * RECORD_TIME;
-    size_t total_bytes = total_samples * sizeof(int16_t);
-
-    int16_t *r_buf = (int16_t *)malloc(bufferLen);
-    assert(r_buf);
-
-    size_t bytes_sent = 0;
-    while (bytes_sent < total_bytes)
+    while (1)
     {
-        size_t bytes_to_read = (bufferLen < total_bytes - bytes_sent) ? bufferLen : (total_bytes - bytes_sent);
+        size_t total_samples = SAMPLE_RATE * RECORD_TIME;
+        size_t total_bytes = total_samples * sizeof(int16_t);
 
-        size_t r_bytes = 0;
-        if (i2s_channel_read(rx_handle, r_buf, bytes_to_read, &r_bytes, portMAX_DELAY) != ESP_OK)
+        int16_t *r_buf = (int16_t *)malloc(bufferLen);
+        assert(r_buf);
+
+        size_t bytes_sent = 0;
+        while (bytes_sent < total_bytes)
         {
-            ESP_LOGE(TAG, "Erro ao ler dados do microfone");
-            break;
-        }
+            size_t bytes_to_read = (bufferLen < total_bytes - bytes_sent) ? bufferLen : (total_bytes - bytes_sent);
 
-        ssize_t sent_bytes = send(sock, r_buf, r_bytes, 0);
-        if (sent_bytes < 0)
-        {
-            ESP_LOGE(TAG, "Erro ao enviar dados para o servidor");
-            break;
-        }
+            size_t r_bytes = 0;
+            if (i2s_channel_read(rx_handle, r_buf, bytes_to_read, &r_bytes, portMAX_DELAY) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Erro ao ler dados do microfone");
+                break;
+            }
 
-        bytes_sent += sent_bytes;
-        printf("%d\n", bytes_sent);
-        vTaskDelay(pdMS_TO_TICKS(6));
+            ssize_t sent_bytes = send(sock, r_buf, r_bytes, 0);
+            if (sent_bytes < 0)
+            {
+                ESP_LOGE(TAG, "Erro ao enviar dados para o servidor");
+                break;
+            }
+
+            bytes_sent += sent_bytes;
+            //printf("%d\n", bytes_sent);
+            vTaskDelay(pdMS_TO_TICKS(6));
+        }
+        vTaskDelay(10);
+        //close(sock);
+        free(r_buf);
+
     }
-    vTaskDelay(10);
-    close(sock);
-    free(r_buf);
 
     ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via TCP.");
     vTaskDelete(NULL);
