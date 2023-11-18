@@ -1,13 +1,3 @@
-/**
- * @file main.c
- * @author Péricles Buarque de Gusmão Filho (periclesbgf@gmail.com)
- * @brief 
- * @version 0.1
- * @date 2023-07-03
- * 
- * @copyright Copyright (c) 2023
- * 
- */
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -23,6 +13,7 @@
 #include <wifih.h>
 #include <esp_event.h>
 #include <tcp.h>
+#include <udp.h>
 #include "freertos/semphr.h"
 #include "esp_spiffs.h"
 
@@ -35,7 +26,6 @@ static const char *TAG = "HomeAssistant";
 #define bufferLen 64
 #define SAMPLE_RATE 16000
 #define RECORD_TIME 1
-
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -52,11 +42,6 @@ size_t bytes_read;
 const int WAVE_HEADER_SIZE = 16;
 SemaphoreHandle_t sema4;
 
-
-/**
- * @brief 
- * 
- */
 void init_microphone(void)
 {
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
@@ -105,27 +90,38 @@ void init_microphone(void)
     }
 }
 
-void i2s_example_tcp_stream_task(void *args)
+void i2s_example_udp_stream_task(void *args)
 {
-    
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0)
     {
-        ESP_LOGE(TAG, "Erro ao criar o socket TCP");
+        ESP_LOGE(TAG, "Erro ao criar o socket UDP");
         vTaskDelete(NULL);
     }
 
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(12445);  // Substitua pelo número da porta do seu servidor
-    inet_aton("192.168.1.3", &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
+    char host_ip[] = HOST_IP_ADDR;
+    int addr_family = 0;
+    int ip_protocol = 0;
 
-    if (connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
-    {
-        ESP_LOGE(TAG, "Erro ao conectar ao servidor");
-        close(sock);
+    struct sockaddr_in dest_addr;
+    dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(PORT);
+    addr_family = AF_INET;
+    ip_protocol = IPPROTO_IP;
+
+    sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
         vTaskDelete(NULL);
     }
+
+    struct timeval timeout;
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
+
+    ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
 
     while (1)
     {
@@ -147,7 +143,7 @@ void i2s_example_tcp_stream_task(void *args)
                 break;
             }
 
-            ssize_t sent_bytes = send(sock, r_buf, r_bytes, 0);
+            ssize_t sent_bytes = sendto(sock, r_buf, r_bytes, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (sent_bytes < 0)
             {
                 ESP_LOGE(TAG, "Erro ao enviar dados para o servidor");
@@ -155,24 +151,79 @@ void i2s_example_tcp_stream_task(void *args)
             }
 
             bytes_sent += sent_bytes;
-            //printf("%d\n", bytes_sent);
+            // printf("%d\n", bytes_sent);
             vTaskDelay(pdMS_TO_TICKS(6));
         }
-        vTaskDelay(10);
-        //close(sock);
-        free(r_buf);
 
+        vTaskDelay(10);
+        free(r_buf);
     }
 
-    ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via TCP.");
+    ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via UDP.");
     vTaskDelete(NULL);
 }
 
+void tcp_server_task(void *pvParameters)
+{
+    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_sock < 0)
+    {
+        ESP_LOGE(TAG, "Erro ao criar o socket TCP do servidor");
+        vTaskDelete(NULL);
+    }
 
-/**
- * @brief example
- * 
- */
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(12345);  // Substitua pelo número da porta desejado
+
+    if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+        ESP_LOGE(TAG, "Erro ao vincular o socket TCP do servidor");
+        close(server_sock);
+        vTaskDelete(NULL);
+    }
+
+    if (listen(server_sock, 5) < 0)
+    {
+        ESP_LOGE(TAG, "Erro ao escutar conexões TCP");
+        close(server_sock);
+        vTaskDelete(NULL);
+    }
+
+    ESP_LOGI(TAG, "Servidor TCP está escutando...");
+
+    while (1)
+    {
+        struct sockaddr_in client_addr;
+        socklen_t addr_len = sizeof(client_addr);
+        int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_len);
+        if (client_sock < 0)
+        {
+            ESP_LOGE(TAG, "Erro ao aceitar conexão TCP");
+            continue;
+        }
+
+        ESP_LOGI(TAG, "Cliente conectado");
+
+        char buffer[1024];
+        ssize_t bytes_received;
+
+        while ((bytes_received = recv(client_sock, buffer, sizeof(buffer), 0)) > 0)
+        {
+            buffer[bytes_received] = '\0';
+            ESP_LOGI(TAG, "Recebido: %s", buffer);
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+            // Faça o que for necessário com a string recebida aqui
+        }
+        vTaskDelay(500);
+        gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
+
+        close(client_sock);
+        ESP_LOGI(TAG, "Cliente desconectado");
+    }
+}
+
 void app_main(void)
 {
     esp_err_t ret = nvs_flash_init();
@@ -196,10 +247,12 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
 
     init_microphone();
-    gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+    
 
     ESP_LOGI(TAG, "Microfone inicializado");
 
-    xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
-    //xTaskCreate(tcp_server, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
+    xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
+
+    xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
+    // xTaskCreate(tcp_server, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
 }
