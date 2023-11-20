@@ -26,6 +26,7 @@ static const char *TAG = "HomeAssistant";
 #define bufferLen 64
 #define SAMPLE_RATE 16000
 #define RECORD_TIME 1
+#define RECORD_TIME_RESPONSE 3
 
 #define LED_PIN 2
 #define FOREVER while(1)
@@ -99,7 +100,6 @@ void i2s_example_udp_stream_task(void *args)
         vTaskDelete(NULL);
     }
 
-    char host_ip[] = HOST_IP_ADDR;
     int addr_family = 0;
     int ip_protocol = 0;
 
@@ -125,6 +125,7 @@ void i2s_example_udp_stream_task(void *args)
 
     while (1)
     {
+        xSemaphoreTake(sema4, portMAX_DELAY);
         size_t total_samples = SAMPLE_RATE * RECORD_TIME;
         size_t total_bytes = total_samples * sizeof(int16_t);
 
@@ -157,11 +158,76 @@ void i2s_example_udp_stream_task(void *args)
 
         vTaskDelay(10);
         free(r_buf);
+        xSemaphoreGive(sema4);
     }
 
     ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via UDP.");
     vTaskDelete(NULL);
 }
+
+void i2s_example_tcp_stream_task(void *args)
+{
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        ESP_LOGE(TAG, "Erro ao criar o socket TCP");
+        vTaskDelete(NULL);
+    }
+
+    struct sockaddr_in server_address;
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(12446);  // Substitua pelo número da porta do seu servidor
+    inet_aton("192.168.1.3", &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
+
+    if (connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
+    {
+        ESP_LOGE(TAG, "Erro ao conectar ao servidor");
+        close(sock);
+        vTaskDelete(NULL);
+    }
+    xSemaphoreTake(sema4, portMAX_DELAY);
+    while (1)
+    {
+        size_t total_samples = SAMPLE_RATE * RECORD_TIME_RESPONSE;
+        size_t total_bytes = total_samples * sizeof(int16_t);
+
+        int16_t *r_buf = (int16_t *)malloc(bufferLen);
+        assert(r_buf);
+
+        size_t bytes_sent = 0;
+        while (bytes_sent < total_bytes)
+        {
+            size_t bytes_to_read = (bufferLen < total_bytes - bytes_sent) ? bufferLen : (total_bytes - bytes_sent);
+
+            size_t r_bytes = 0;
+            if (i2s_channel_read(rx_handle, r_buf, bytes_to_read, &r_bytes, portMAX_DELAY) != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Erro ao ler dados do microfone");
+                break;
+            }
+
+            ssize_t sent_bytes = send(sock, r_buf, r_bytes, 0);
+            if (sent_bytes < 0)
+            {
+                ESP_LOGE(TAG, "Erro ao enviar dados para o servidor");
+                break;
+            }
+
+            bytes_sent += sent_bytes;
+            //printf("%d\n", bytes_sent);
+            vTaskDelay(pdMS_TO_TICKS(6));
+
+            vTaskDelay(10);
+            //close(sock);
+            free(r_buf);
+        }
+    }
+    xSemaphoreGive(sema4);
+    ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via TCP.");
+    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelete(NULL);
+}
+
 
 void tcp_server_task(void *pvParameters)
 {
@@ -213,16 +279,28 @@ void tcp_server_task(void *pvParameters)
         {
             buffer[bytes_received] = '\0';
             ESP_LOGI(TAG, "Recebido: %s", buffer);
-            gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+            if (strcmp(buffer, "eden") == 0)
+            {
+                // Libere o semáforo para continuar a execução da task i2s_example_udp_stream_task
+                //xSemaphoreGive(sema4);
+
+                // Crie uma nova task para processar com um tempo de gravação diferente
+                gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+                vTaskDelay(10);
+                xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
+                
+            }
+            
             // Faça o que for necessário com a string recebida aqui
         }
-        vTaskDelay(500);
+        vTaskDelay(200);
         gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
 
         close(client_sock);
         ESP_LOGI(TAG, "Cliente desconectado");
     }
 }
+
 
 void app_main(void)
 {
@@ -237,17 +315,19 @@ void app_main(void)
     ESP_LOGI(TAG, "Inicializando...");
     wifi_init_sta();
 
+    sema4 = xSemaphoreCreateBinary();
+    xSemaphoreGive(sema4);
+
     gpio_set_level(GPIO_USER_PURPLE_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
 
-    esp_err_t status = ESP_FAIL;
+    //esp_err_t status = ESP_FAIL;
     gpio_configure();
     ESP_LOGI(TAG, "Inicializando Microfone");
 
     ESP_ERROR_CHECK(esp_netif_init());
 
     init_microphone();
-    
 
     ESP_LOGI(TAG, "Microfone inicializado");
 
