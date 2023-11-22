@@ -26,9 +26,6 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#define HOST_IP_ADDR "192.168.1.3"
-#define PORT 12445
-
 int udp_client_task(void);
 
 #endif
