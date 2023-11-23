@@ -31,7 +31,7 @@ esp_err_t gpio_configure(void)
     io_conf.mode = GPIO_MODE_OUTPUT;
 
     //selecionar quais pinos iremos configurar
-    io_conf.pin_bit_mask = ((1<<GPIO_USER_LED_PIN)|(1<<GPIO_USER_GREEN_LED_PIN)|(1<<GPIO_USER_PURPLE_LED_PIN));
+    io_conf.pin_bit_mask = ((1<<GPIO_USER_LED_PIN)|(1<<GPIO_USER_GREEN_LED_PIN)|(1<<GPIO_USER_PURPLE_LED_PIN)|(1<<GPIO_USER_RED_LED_PIN)|(1<<GPIO_USER_BLUE_LED_PIN));
 
     //configurar os resistores
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;

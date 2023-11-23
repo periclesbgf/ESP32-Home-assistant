@@ -298,13 +298,26 @@ void tcp_server_task(void *pvParameters)
             ESP_LOGI(TAG, "Recebido: %s", buffer);
             if (strcmp(buffer, "eden") == 0)
             {
-                // Libere o semáforo para continuar a execução da task i2s_example_udp_stream_task
-                // Crie uma nova task para processar com um tempo de gravação diferente
                 semaforo = 2;
                 vTaskDelay(10);
                 //xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
             }
-            // Faça o que for necessário com a string recebida aqui
+            else if(strcmp(buffer, "ll1") == 0)
+            {
+                gpio_set_level(GPIO_USER_RED_LED_PIN, HIGH);
+            }
+            else if(strcmp(buffer, "dl1") == 0)
+            {
+                gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
+            }
+            else if(strcmp(buffer, "ll2") == 0)
+            {
+                gpio_set_level(GPIO_USER_RED_LED_PIN, HIGH);
+            }
+            else if(strcmp(buffer, "dl2") == 0)
+            {
+                gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
+            }
         }
         vTaskDelay(200);
 
@@ -334,7 +347,8 @@ void app_main(void)
     gpio_set_level(GPIO_USER_PURPLE_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_LED_PIN, LOW);
-
+    gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);
+    gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
     //esp_err_t status = ESP_FAIL;
     gpio_configure();
     ESP_LOGI(TAG, "Inicializando Microfone");
