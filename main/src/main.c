@@ -312,11 +312,11 @@ void tcp_server_task(void *pvParameters)
             }
             else if(strcmp(buffer, "ll2") == 0)
             {
-                gpio_set_level(GPIO_USER_RED_LED_PIN, HIGH);
+                gpio_set_level(GPIO_USER_BLUE_LED_PIN, HIGH);
             }
             else if(strcmp(buffer, "dl2") == 0)
             {
-                gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
+                gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);
             }
         }
         vTaskDelay(200);
