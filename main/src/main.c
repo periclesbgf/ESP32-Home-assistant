@@ -20,7 +20,7 @@
 static const char *TAG = "HomeAssistant";
 
 #define I2S_WS GPIO_NUM_3
-#define I2S_SD 13
+#define I2S_SD GPIO_NUM_5
 #define I2S_SCK GPIO_NUM_2
 #define I2S_PORT I2S_NUM_0
 #define bufferLen 64
@@ -155,7 +155,6 @@ void i2s_example_udp_stream_task(void *args)
                 }
 
                 bytes_sent += sent_bytes;
-                // printf("%d\n", bytes_sent);
                 vTaskDelay(pdMS_TO_TICKS(6));
             }
             vTaskDelay(10);
@@ -198,6 +197,8 @@ void i2s_example_tcp_stream_task(void *args)
                 vTaskDelete(NULL);
             }
             gpio_set_level(GPIO_USER_GREEN_LED_PIN, HIGH);
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN_2, HIGH);
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, HIGH);
             size_t total_samples = SAMPLE_RATE * RECORD_TIME_RESPONSE;
             size_t total_bytes = total_samples * sizeof(int16_t);
 
@@ -225,16 +226,16 @@ void i2s_example_tcp_stream_task(void *args)
                 }
 
                 bytes_sent += sent_bytes;
-                //printf("%d\n", bytes_sent);
                 vTaskDelay(pdMS_TO_TICKS(6));
             }
-            gpio_set_level(GPIO_USER_LED_PIN, LOW);
             vTaskDelay(10);
             close(sock);
             free(r_buf);
 
             ESP_LOGI(TAG, "Envio concluído. Dados enviados para o servidor via TCP.");
             gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN_2, LOW);
+            gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, LOW);
             semaforo = 1;
             vTaskDelay(pdMS_TO_TICKS(100));
         }
@@ -300,7 +301,6 @@ void tcp_server_task(void *pvParameters)
             {
                 semaforo = 2;
                 vTaskDelay(10);
-                //xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
             }
             else if(strcmp(buffer, "ll1") == 0)
             {
@@ -312,11 +312,11 @@ void tcp_server_task(void *pvParameters)
             }
             else if(strcmp(buffer, "ll2") == 0)
             {
-                gpio_set_level(GPIO_USER_BLUE_LED_PIN, HIGH);
+                gpio_set_level(LUMINARIA, HIGH);
             }
             else if(strcmp(buffer, "dl2") == 0)
             {
-                gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);
+                gpio_set_level(LUMINARIA, LOW);
             }
         }
         vTaskDelay(200);
@@ -344,7 +344,8 @@ void app_main(void)
     sema_tcp = xSemaphoreCreateBinary();
     xSemaphoreGive(sema4);
 
-    gpio_set_level(GPIO_USER_PURPLE_LED_PIN, LOW);
+    gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, LOW);
+    gpio_set_level(GPIO_USER_GREEN_LED_PIN_2, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);

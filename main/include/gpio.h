@@ -24,10 +24,11 @@
 #define GPIO_DHT11_PIN     GPIO_NUM_5 //Definindo o pino do sensor de temperatura como o GPIO_5 de acordo com o datasheet
 #define GPIO_USER_LED_PIN  GPIO_NUM_2 //Definindo o pino do LED como o GPIO_2 de acordo com o datasheet
 #define GPIO_USER_GREEN_LED_PIN  GPIO_NUM_22
-#define GPIO_USER_PURPLE_LED_PIN GPIO_NUM_23
+#define GPIO_USER_GREEN_LED_PIN_2  GPIO_NUM_21
+#define GPIO_USER_GREEN_LED_PIN_3 GPIO_NUM_23
 #define GPIO_USER_BLUE_LED_PIN GPIO_NUM_12
 #define GPIO_USER_RED_LED_PIN GPIO_NUM_4
-//#define GPIO_USER_GREEN_RGB_LED_PIN  GPIO_NUM_22
+#define LUMINARIA GPIO_NUM_18
 //#define GPIO_USER_RED_RGB_LED_PIN  GPIO_NUM_21
 //#define GPIO_USER_BLUE_RGB_LED_PIN  GPIO_NUM_19
 //#define GPIO_USER_DYP  GPIO_NUM_23

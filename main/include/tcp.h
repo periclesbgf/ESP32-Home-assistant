@@ -21,7 +21,7 @@
 #include "esp_netif.h"
 #include "esp_log.h"
 
-#define HOST_IP_ADDR "192.168.1.3"
+#define HOST_IP_ADDR "192.168.1.3" //Substitua pelo IP do servidor em python
 #define PORT 12445
 
 int tcp_client(void);
