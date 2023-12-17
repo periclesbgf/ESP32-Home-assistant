@@ -116,7 +116,7 @@ esp_err_t dth11_read_statistics(void)
     }
 
     if(_dht11_receive_start_signal() == ESP_ERR_TIMEOUT)
-    {
+    {   
         ESP_LOGE(tag, "ERROR receiving DHT11 start signal");
         return ESP_FAIL;
     }
