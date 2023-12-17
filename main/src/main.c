@@ -45,6 +45,12 @@ SemaphoreHandle_t sema4;
 SemaphoreHandle_t sema_tcp;
 int semaforo = 1;
 
+/**
+ * @brief Initializes the microphone for recording.
+ *
+ * Configures the I2S channel for audio recording. If there's a failure in configuration,
+ * an error message is logged, and the program is terminated.
+ */
 void init_microphone(void)
 {
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
@@ -93,6 +99,14 @@ void init_microphone(void)
     }
 }
 
+/**
+ * @brief Task for transmitting audio over UDP.
+ *
+ * This task creates a UDP socket and continuously transmits audio data.
+ * If there's an error in socket creation or transmission failure, the task is terminated.
+ *
+ * @param args Arguments for the task (not used).
+ */
 void i2s_example_udp_stream_task(void *args)
 {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -170,6 +184,14 @@ void i2s_example_udp_stream_task(void *args)
     vTaskDelete(NULL);
 }
 
+/**
+ * @brief Task for transmitting audio over TCP.
+ *
+ * This task creates a TCP socket and transmits audio data to a specified server.
+ * If there's an error in socket creation or connection, the task is terminated.
+ *
+ * @param args Arguments for the task (not used).
+ */
 void i2s_example_tcp_stream_task(void *args)
 {
     vTaskDelay(10);
@@ -247,6 +269,14 @@ void i2s_example_tcp_stream_task(void *args)
 }
 
 
+/**
+ * @brief TCP Server Task.
+ *
+ * This task creates a TCP server that listens for connections and processes received commands.
+ * If there's an error in socket creation or in listening for connections, the task is terminated.
+ *
+ * @param pvParameters Parameters for the task (not used).
+ */
 void tcp_server_task(void *pvParameters)
 {
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -326,7 +356,11 @@ void tcp_server_task(void *pvParameters)
     }
 }
 
-
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 void app_main(void)
 {
     esp_err_t ret = nvs_flash_init();

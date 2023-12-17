@@ -102,9 +102,9 @@ static void udp_client_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-void app_main(void)
-{
+// void app_main(void)
+// {
 
 
-    xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
-}
+//     xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
+// }
