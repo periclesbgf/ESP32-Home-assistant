@@ -4,3 +4,4 @@ sdkconfig.old
 .vscode
 .devcontainer
 components/
+wifiid.txt
