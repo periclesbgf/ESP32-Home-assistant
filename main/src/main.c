@@ -378,14 +378,16 @@ void app_main(void)
     sema_tcp = xSemaphoreCreateBinary();
     xSemaphoreGive(sema4);
 
+    //esp_err_t status = ESP_FAIL;
+    gpio_configure();
+
     gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN_2, LOW);
     gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);
     gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
-    //esp_err_t status = ESP_FAIL;
-    gpio_configure();
+
     ESP_LOGI(TAG, "Inicializando Microfone");
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -394,8 +396,8 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Microfone inicializado");
 
-    xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
+    xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
     //vTaskStartScheduler();
 }
