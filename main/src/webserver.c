@@ -55,7 +55,13 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 
 const char *html = "<!DOCTYPE html><html><body>"
                    "<h1>Bem vindo(a) a configuracao do Eden, seu tutor!</h1>"
-                   "<a href=\"/submit\">Configure aqui</a>"
+                   "<form action=\"/submit\" method=\"post\">"
+                   "<label for=\"ssid\">SSID:</label><br>"
+                   "<input type=\"text\" id=\"ssid\" name=\"ssid\"><br>"
+                   "<label for=\"password\">Password:</label><br>"
+                   "<input type=\"password\" id=\"password\" name=\"password\"><br><br>"
+                   "<input type=\"submit\" value=\"Submit\">"
+                   "</form>"
                    "</body></html>";
 
 const char *html_form = "<!DOCTYPE html><html><body>"
@@ -69,38 +75,51 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "</form>"
                         "</body></html>";
 
-
-
 // Handler para o método POST que recebe os dados do formulário
 esp_err_t post_handler(httpd_req_t *req) {
-    char content[100];
-    char ssid[32] = {0};
-    char password[64] = {0};
+    char* buf;
+    size_t buf_len;
+
+    // Obtém o comprimento do conteúdo da requisição
+    buf_len = req->content_len;
+
+    // Aloca memória para armazenar o conteúdo da requisição
+    buf = malloc(buf_len + 1);
+    if (!buf) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
 
     // Lê o conteúdo enviado pelo formulário
-    int ret = httpd_req_recv(req, content, sizeof(content));
+    int ret = httpd_req_recv(req, buf, buf_len);
     if (ret <= 0) { // Se houve erro ou está vazio
         if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
             // Timeout
             httpd_resp_send_408(req);
         }
+        free(buf);
         return ESP_FAIL;
     }
 
-    content[ret] = '\0'; // Null-terminate whatever we received and treat it like a string
+    buf[ret] = '\0'; // Null-terminate whatever we received and treat it like a string
+
+    // As variáveis ssid e password são usadas para armazenar os valores decodificados
+    char ssid[32] = {0};
+    char password[64] = {0};
 
     // Extrai os dados para as variáveis ssid e password
-    sscanf(content, "ssid=%[^&]&password=%s", ssid, password);
-
-    // Converte URL encoding para caracteres normais
-    httpd_query_key_value(content, "ssid", ssid, sizeof(ssid));
-    httpd_query_key_value(content, "password", password, sizeof(password));
+    httpd_query_key_value(buf, "ssid", ssid, sizeof(ssid));
+    httpd_query_key_value(buf, "password", password, sizeof(password));
 
     ESP_LOGI(TAG, "SSID recebido: %s", ssid);
     ESP_LOGI(TAG, "Senha recebida: %s", password);
 
+    // Libera a memória alocada para buf
+    free(buf);
+
     // Envie uma resposta ao cliente
-    httpd_resp_send(req, "Configurações recebidas", HTTPD_RESP_USE_STRLEN);
+    const char* resp = "configuracao recebida com sucesso!";
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
 
     // Aqui você poderia, por exemplo, configurar o SSID e a senha
     // com as novas informações recebidas
@@ -109,10 +128,13 @@ esp_err_t post_handler(httpd_req_t *req) {
 }
 
 esp_err_t get_handler(httpd_req_t *req) {
-    httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    if (strcmp(req->uri, "/submit") == 0) {
+        httpd_resp_send(req, html_form, HTTPD_RESP_USE_STRLEN);
+    } else {
+        httpd_resp_send(req, html, HTTPD_RESP_USE_STRLEN);
+    }
     return ESP_OK;
 }
-
 
 httpd_uri_t uri_get = {
     .uri = "/",
@@ -134,7 +156,11 @@ httpd_handle_t start_webserver(void) {
 
     httpd_handle_t server = NULL;
     if (httpd_start(&server, &config) == ESP_OK) {
+        // Registra o manipulador para requisições GET
         httpd_register_uri_handler(server, &uri_get);
+
+        // Registra o manipulador para requisições POST
+        httpd_register_uri_handler(server, &uri_post);
     } else {
         ESP_LOGI(TAG, "Erro ao iniciar o servidor web");
     }
