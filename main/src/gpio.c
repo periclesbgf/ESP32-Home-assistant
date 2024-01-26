@@ -39,7 +39,7 @@ esp_err_t gpio_configure(void)
 
     return gpio_config(&io_conf);
 }
-
+#if 0
 /**
  * @brief 
  * 
@@ -84,3 +84,4 @@ esp_err_t gpio_configure_led_rgb(void)
     return gpio_config(&io_conf);
 }
 */
+#endif

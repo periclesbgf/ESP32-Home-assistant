@@ -25,7 +25,7 @@
 #define HOST_IP_ADDR "192.168.1.3"
 
 
-#define PORT CONFIG_EXAMPLE_PORT
+#define PORT 1234
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";

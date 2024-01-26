@@ -16,6 +16,7 @@
 #include <udp.h>
 #include "freertos/semphr.h"
 #include "esp_spiffs.h"
+#include <webserver.h>
 
 static const char *TAG = "HomeAssistant";
 
@@ -356,6 +357,11 @@ void tcp_server_task(void *pvParameters)
     }
 }
 
+static esp_err_t init_wifi(void)
+{
+    wifi_init_softap();
+}
+
 /**
  * @brief Main entry point of the program.
  *
@@ -372,9 +378,12 @@ void app_main(void)
 
     ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "Inicializando...");
+    //sema4 = xSemaphoreCreateBinary();
+    
+    wifi_init_softap();
     wifi_init_sta();
 
-    sema4 = xSemaphoreCreateBinary();
+
     sema_tcp = xSemaphoreCreateBinary();
     xSemaphoreGive(sema4);
 

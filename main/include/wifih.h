@@ -22,8 +22,8 @@
 #include <lwip/sockets.h>
 
 #define ESP_WIFI_AUTH_WPA2_PSK
-#define ESP_WIFI_SSID "ssid"
-#define ESP_WIFI_PASSWORD "password"
+#define ESP_WIFI_SSID "login123"
+#define ESP_WIFI_PASSWORD "123"
 #define ESP_WPA3_SAE_PWE_BOTH
 #define ESP_WIFI_PW_ID ""
 #define ESP_MAXIMUM_RETRY 5

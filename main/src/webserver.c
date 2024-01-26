@@ -1,41 +1,10 @@
-/*  WiFi softAP Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_mac.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
-#include "esp_http_server.h"
-
-
-#include "lwip/err.h"
-#include "lwip/sys.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "nvs_flash.h"
-#include "esp_http_server.h"
+#include "webserver.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu.
 
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define EXAMPLE_ESP_WIFI_SSID      CONFIG_ESP_WIFI_SSID
-#define EXAMPLE_ESP_WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
-#define EXAMPLE_ESP_WIFI_CHANNEL   CONFIG_ESP_WIFI_CHANNEL
-#define EXAMPLE_MAX_STA_CONN       CONFIG_ESP_MAX_STA_CONN
 
 static const char *TAG = "wifi softAP";
 
@@ -75,6 +44,24 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "</form>"
                         "</body></html>";
 
+static void kill_server(void *pvParameter)
+{
+    httpd_handle_t *server = (httpd_handle_t *)pvParameter;
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    stop_webserver(*server);
+    free(server);
+    vTaskDelete(NULL);
+
+}
+void stop_webserver(httpd_handle_t server)
+{
+     // Ensure handle is non NULL
+     if (server != NULL) {
+         // Stop the httpd server
+         httpd_stop(server);
+     }
+}
+
 // Handler para o método POST que recebe os dados do formulário
 esp_err_t post_handler(httpd_req_t *req) {
     char* buf;
@@ -113,6 +100,8 @@ esp_err_t post_handler(httpd_req_t *req) {
 
     ESP_LOGI(TAG, "SSID recebido: %s", ssid);
     ESP_LOGI(TAG, "Senha recebida: %s", password);
+
+    
 
     // Libera a memória alocada para buf
     free(buf);
@@ -173,6 +162,7 @@ void stop_webserver(httpd_handle_t server) {
 
 void wifi_init_softap(void)
 {
+    ESP_LOGI(TAG, "wifi_init_softap");
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_ap();
@@ -216,18 +206,4 @@ void wifi_init_softap(void)
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 
     start_webserver();
-}
-
-void app_main(void)
-{
-    //Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
-    wifi_init_softap();
 }
