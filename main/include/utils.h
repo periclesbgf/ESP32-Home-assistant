@@ -29,8 +29,12 @@
 #include "freertos/semphr.h"
 #include "esp_spiffs.h"
 #include <webserver.h>
+#include "nvs_flash.h"
+#include "esp_wifi.h"
+
 
 #define True 1
 #define False 0
+
 
 #endif

@@ -12,6 +12,41 @@ int sema5 = 0;
 
 static const char *TAG = "wifi softAP";
 
+
+// Função para converter um caractere hexadecimal em decimal
+static int hex2int(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return -1;
+}
+
+// Função para decodificar uma string codificada em URL
+static void url_decode(char *dst, const char *src) {
+    char a, b;
+    while (*src) {
+        if ((*src == '%') &&
+            ((a = src[1]) && (b = src[2])) &&
+            (isxdigit(a) && isxdigit(b))) {
+            if (a >= 'a') a -= 'a'-'A';
+            if (a >= 'A') a -= ('A' - 10);
+            else a -= '0';
+            if (b >= 'a') b -= 'a'-'A';
+            if (b >= 'A') b -= ('A' - 10);
+            else b -= '0';
+
+            *dst++ = 16*a+b;
+            src+=3;
+        } else if (*src == '+') {
+            *dst++ = ' ';
+            src++;
+        } else {
+            *dst++ = *src++;
+        }
+    }
+    *dst++ = '\0';
+}
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
@@ -49,8 +84,24 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "</body></html>";
 
 
+void store_credentials(const char *ssid, const char *password) 
+{
+    // Abre o namespace NVS
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("wifi_config", NVS_READWRITE, &nvs_handle));
+
+    // Armazena as credenciais no NVS
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "ssid", ssid));
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "password", password));
+
+    // Fecha o namespace NVS
+    nvs_commit(nvs_handle);
+    nvs_close(nvs_handle);
+}
+
 // Handler para o método POST que recebe os dados do formulário
-esp_err_t post_handler(httpd_req_t *req) {
+esp_err_t post_handler(httpd_req_t *req)
+{
     char* buf;
     size_t buf_len;
 
@@ -84,13 +135,18 @@ esp_err_t post_handler(httpd_req_t *req) {
     httpd_query_key_value(buf, "ssid", ssid, sizeof(ssid));
     httpd_query_key_value(buf, "password", password, sizeof(password));
 
-    sema5 = 1;
+    // Decodifica a senha
+    char decodedPassword[64] = {0}; // Certifique-se de que este array seja grande o suficiente para armazenar o resultado decodificado
+    url_decode(decodedPassword, password);
 
     ESP_LOGI(TAG, "SSID recebido: %s", ssid);
-    ESP_LOGI(TAG, "Senha recebida: %s", password);
+    ESP_LOGI(TAG, "Senha recebida: %s", decodedPassword);
 
+    store_credentials(ssid, decodedPassword);
 
-    wifi_init_sta(ssid, password);
+    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s", ssid, password);
+
+    sema5 = 1;
 
     free(buf);
 
@@ -145,11 +201,10 @@ httpd_handle_t start_webserver(void) {
 }
 
 void stop_webserver(httpd_handle_t server) {
-    while (sema5 ==1)
+    ESP_LOGI(TAG, "PARANDO O WEBSERVER");
+    while (sema5 == 1)
     {
         httpd_stop(server);
-        vTaskDelay(pdMS_TO_TICKS(3000));
-        sema5 = 0;
     }
 }
 
@@ -201,12 +256,12 @@ esp_err_t wifi_init_softap(void)
     ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 
-    start_webserver();
+    httpd_handle_t server = start_webserver();
 
     while (sema5 != 1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-
+    httpd_stop(server);
     return ESP_OK;
 }

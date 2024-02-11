@@ -26,6 +26,10 @@
 #define ESP_WIFI_PW_ID ""
 #define ESP_MAXIMUM_RETRY 5
 
-void wifi_init_sta(const char*,const char*);
+#define SSID_LENGTH 32
+#define PASSWORD_LENGTH 64
+
+esp_err_t retrieve_credentials(char *ssid, char *password);
+void wifi_init_sta();
 
 #endif

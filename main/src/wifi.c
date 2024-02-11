@@ -60,14 +60,42 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(const char *ssid, const char *password)
+esp_err_t retrieve_credentials(char *ssid, char *password) {
+
+    // Abre o namespace NVS
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("wifi_config", NVS_READONLY, &nvs_handle));
+
+    // Recupera as credenciais do NVS
+    size_t ssid_size, password_size;
+    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "ssid", NULL, &ssid_size));
+    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "password", NULL, &password_size));
+
+    if (ssid_size > 0 && password_size > 0) {
+        ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "ssid", ssid, &ssid_size));
+        ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "password", password, &password_size));
+    }
+
+    // Fecha o namespace NVS
+    nvs_close(nvs_handle);
+
+    return ESP_OK;
+}
+
+void wifi_init_sta()
 {
-    vTaskDelay(pdMS_TO_TICKS(5000));
+
+    char ssid[SSID_LENGTH];
+    char password[PASSWORD_LENGTH];
+    ESP_LOGI(TAG, "wifi_init_sta Initializing WIFI");
+    retrieve_credentials(ssid, password);
+    ESP_LOGI(TAG, "wifi_init_sta finished. SSID: %s password: %s", ssid, password);
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
 
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    /*ESP_ERROR_CHECK(esp_event_loop_create_default());*/
+    esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -88,17 +116,20 @@ void wifi_init_sta(const char *ssid, const char *password)
 
     wifi_config_t wifi_config = {
         .sta = {
+            .ssid = "",
+            .password = "",
             .threshold.authmode = ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD,
             .sae_pwe_h2e = ESP_WIFI_SAE_MODE,
             .sae_h2e_identifier = EXAMPLE_H2E_IDENTIFIER,
         },
     };
-    strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
-    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
+
+    strncpy((char *)wifi_config.sta.ssid, ssid, SSID_LENGTH);
+    strncpy((char *)wifi_config.sta.password, password, PASSWORD_LENGTH);
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    ESP_ERROR_CHECK(esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
 

@@ -366,7 +366,11 @@ void app_main(void)
         ESP_LOGI(TAG, "Erro ao inicializar o Hotspot");
     }
 
-    vTaskDelay(pdMS_TO_TICKS(100));
+    ESP_LOGI(TAG, "Desligando o ponto de acesso WiFi...");
+    ESP_ERROR_CHECK(esp_wifi_stop()); // Para o WiFi
+    ESP_ERROR_CHECK(esp_wifi_deinit()); // Desinicializa o driver do WiFi (opcional)
+    ESP_LOGI(TAG, "Ponto de acesso desligado");
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     wifi_init_sta();
 
