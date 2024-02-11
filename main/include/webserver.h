@@ -23,6 +23,6 @@ esp_err_t post_handler(httpd_req_t*);
 esp_err_t get_handler(httpd_req_t*);
 httpd_handle_t start_webserver(void);
 void stop_webserver(httpd_handle_t);
-void wifi_init_softap(void);
+int wifi_init_softap(void);
 
 #endif

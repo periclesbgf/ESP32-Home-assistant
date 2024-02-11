@@ -1,4 +1,8 @@
 #include "webserver.h"
+#include "wifih.h"
+#include "utils.h"
+
+int sema5 = 0;
 
 /* The examples use WiFi configuration that you can set via project configuration menu.
 
@@ -44,23 +48,6 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "</form>"
                         "</body></html>";
 
-static void kill_server(void *pvParameter)
-{
-    httpd_handle_t *server = (httpd_handle_t *)pvParameter;
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
-    stop_webserver(*server);
-    free(server);
-    vTaskDelete(NULL);
-
-}
-void stop_webserver(httpd_handle_t server)
-{
-     // Ensure handle is non NULL
-     if (server != NULL) {
-         // Stop the httpd server
-         httpd_stop(server);
-     }
-}
 
 // Handler para o método POST que recebe os dados do formulário
 esp_err_t post_handler(httpd_req_t *req) {
@@ -90,7 +77,6 @@ esp_err_t post_handler(httpd_req_t *req) {
 
     buf[ret] = '\0'; // Null-terminate whatever we received and treat it like a string
 
-    // As variáveis ssid e password são usadas para armazenar os valores decodificados
     char ssid[32] = {0};
     char password[64] = {0};
 
@@ -98,12 +84,14 @@ esp_err_t post_handler(httpd_req_t *req) {
     httpd_query_key_value(buf, "ssid", ssid, sizeof(ssid));
     httpd_query_key_value(buf, "password", password, sizeof(password));
 
+    sema5 = 1;
+
     ESP_LOGI(TAG, "SSID recebido: %s", ssid);
     ESP_LOGI(TAG, "Senha recebida: %s", password);
 
-    
 
-    // Libera a memória alocada para buf
+    wifi_init_sta(ssid, password);
+
     free(buf);
 
     // Envie uma resposta ao cliente
@@ -157,12 +145,20 @@ httpd_handle_t start_webserver(void) {
 }
 
 void stop_webserver(httpd_handle_t server) {
-    httpd_stop(server);
+    while (sema5 ==1)
+    {
+        httpd_stop(server);
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        sema5 = 0;
+    }
 }
 
-void wifi_init_softap(void)
+esp_err_t wifi_init_softap(void)
 {
     ESP_LOGI(TAG, "wifi_init_softap");
+
+    esp_err_t status = ESP_FAIL;
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_ap();
@@ -206,4 +202,11 @@ void wifi_init_softap(void)
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 
     start_webserver();
+
+    while (sema5 != 1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+    return ESP_OK;
 }

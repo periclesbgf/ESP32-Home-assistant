@@ -1,22 +1,5 @@
 #include <stdio.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <esp_log.h>
-#include <gpio.h>
-#include <dht11.h>
-#include <led_rgb.h>
-#include <inmp441.h>
-#include <driver/i2s_std.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <wifih.h>
-#include <esp_event.h>
-#include <tcp.h>
-#include <udp.h>
-#include "freertos/semphr.h"
-#include "esp_spiffs.h"
-#include <webserver.h>
+#include "utils.h"
 
 static const char *TAG = "HomeAssistant";
 
@@ -269,7 +252,6 @@ void i2s_example_tcp_stream_task(void *args)
     }
 }
 
-
 /**
  * @brief TCP Server Task.
  *
@@ -357,11 +339,6 @@ void tcp_server_task(void *pvParameters)
     }
 }
 
-static esp_err_t init_wifi(void)
-{
-    wifi_init_softap();
-}
-
 /**
  * @brief Main entry point of the program.
  *
@@ -379,11 +356,21 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "Inicializando...");
     //sema4 = xSemaphoreCreateBinary();
-    
-    wifi_init_softap();
+
+    if(wifi_init_softap() == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Hotspot inicializando");
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Erro ao inicializar o Hotspot");
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+
     wifi_init_sta();
 
-
+    vTaskDelay(pdMS_TO_TICKS(100));
     sema_tcp = xSemaphoreCreateBinary();
     xSemaphoreGive(sema4);
 
