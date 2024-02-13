@@ -22,7 +22,7 @@
 #include <lwip/netdb.h>
 
 #define HOST_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
-#define HOST_IP_ADDR "192.168.1.3"
+#define HOST_IP_ADDR "192.168.1.10"
 
 
 #define PORT 1234

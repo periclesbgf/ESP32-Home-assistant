@@ -194,7 +194,7 @@ void i2s_example_tcp_stream_task(void *args)
             struct sockaddr_in server_address;
             server_address.sin_family = AF_INET;
             server_address.sin_port = htons(12446);  // Substitua pelo número da porta do seu servidor
-            inet_aton("192.168.1.3", &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
+            inet_aton(HOST_IP_ADDR, &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
 
             if (connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
             {
@@ -356,7 +356,7 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "Inicializando...");
     //sema4 = xSemaphoreCreateBinary();
-
+    esp_netif_t *net_if = NULL;
     if(wifi_init_softap() == ESP_OK)
     {
         ESP_LOGI(TAG, "Hotspot inicializando");
@@ -367,18 +367,24 @@ void app_main(void)
     }
 
     ESP_LOGI(TAG, "Desligando o ponto de acesso WiFi...");
+    
+#if 0
+    ESP_ERROR_CHECK(esp_wifi_disconnect());
     ESP_ERROR_CHECK(esp_wifi_stop()); // Para o WiFi
     ESP_ERROR_CHECK(esp_wifi_deinit()); // Desinicializa o driver do WiFi (opcional)
+#endif
     ESP_LOGI(TAG, "Ponto de acesso desligado");
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    
 
     wifi_init_sta();
-
+    ESP_LOGI(TAG, "main wifi_init_sta finished");
+    #if 0
     vTaskDelay(pdMS_TO_TICKS(100));
     sema_tcp = xSemaphoreCreateBinary();
     xSemaphoreGive(sema4);
-
+    #endif
     //esp_err_t status = ESP_FAIL;
+    ESP_LOGI(TAG, "main configure GPIOs... ");
     gpio_configure();
 
     gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, LOW);
@@ -389,9 +395,9 @@ void app_main(void)
     gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
 
     ESP_LOGI(TAG, "Inicializando Microfone");
-
+#if 0
     ESP_ERROR_CHECK(esp_netif_init());
-
+#endif
     init_microphone();
 
     ESP_LOGI(TAG, "Microfone inicializado");

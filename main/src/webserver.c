@@ -212,10 +212,9 @@ esp_err_t wifi_init_softap(void)
 {
     ESP_LOGI(TAG, "wifi_init_softap");
 
-    esp_err_t status = ESP_FAIL;
-
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     esp_netif_create_default_wifi_ap();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();

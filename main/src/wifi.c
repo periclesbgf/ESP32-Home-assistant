@@ -91,16 +91,22 @@ void wifi_init_sta()
     retrieve_credentials(ssid, password);
     ESP_LOGI(TAG, "wifi_init_sta finished. SSID: %s password: %s", ssid, password);
     s_wifi_event_group = xEventGroupCreate();
-
+    ESP_LOGI(TAG, "wifi_init_sta after xEventGroupCreate");
+#if 0
     ESP_ERROR_CHECK(esp_netif_init());
 
-    /*ESP_ERROR_CHECK(esp_event_loop_create_default());*/
-    esp_event_loop_create_default();
-    esp_netif_create_default_wifi_sta();
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
+    ESP_LOGI(TAG, "wifi_init_sta destroying default wifi netif");
+    esp_netif_destroy_default_wifi(esp_netif_get_default_netif());
+    ESP_LOGI(TAG, "wifi_init_sta after destroying default wifi netif");
+#endif
+    esp_netif_create_default_wifi_sta();
+    ESP_LOGI(TAG, "wifi_init_sta after creating default wifi sta");
+#if 0
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+#endif
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
@@ -153,3 +159,21 @@ void wifi_init_sta()
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 }
+#if 0
+esp_err_t wifi_config_init()
+{
+    ESP_LOGI(TAG, "wifi_config_init");
+
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_ap();
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &event_handler,
+                                                        NULL,
+                                                        NULL));
+    return ESP_OK;
+}
+#endif
