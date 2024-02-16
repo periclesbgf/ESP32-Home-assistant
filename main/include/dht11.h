@@ -24,5 +24,5 @@
 esp_err_t dht11_configure(void);
 esp_err_t dth11_read_statistics(void);
 
-#endif// _DHT11_H_
+#endif
 

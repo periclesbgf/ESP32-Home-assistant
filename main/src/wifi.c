@@ -82,7 +82,7 @@ esp_err_t retrieve_credentials(char *ssid, char *password) {
     return ESP_OK;
 }
 
-void wifi_init_sta()
+esp_err_t wifi_init_sta()
 {
 
     char ssid[SSID_LENGTH];
@@ -158,6 +158,8 @@ void wifi_init_sta()
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
+
+    return ESP_OK;
 }
 #if 0
 esp_err_t wifi_config_init()

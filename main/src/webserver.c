@@ -4,16 +4,13 @@
 
 int sema5 = 0;
 
-/* The examples use WiFi configuration that you can set via project configuration menu.
-
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
-
 static const char *TAG = "wifi softAP";
 
-
-// Função para converter um caractere hexadecimal em decimal
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 static int hex2int(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
@@ -21,7 +18,11 @@ static int hex2int(char c) {
     return -1;
 }
 
-// Função para decodificar uma string codificada em URL
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 static void url_decode(char *dst, const char *src) {
     char a, b;
     while (*src) {
@@ -47,6 +48,11 @@ static void url_decode(char *dst, const char *src) {
     *dst++ = '\0';
 }
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
@@ -84,6 +90,11 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "</body></html>";
 
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 void store_credentials(const char *ssid, const char *password) 
 {
     // Abre o namespace NVS
@@ -99,7 +110,11 @@ void store_credentials(const char *ssid, const char *password)
     nvs_close(nvs_handle);
 }
 
-// Handler para o método POST que recebe os dados do formulário
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 esp_err_t post_handler(httpd_req_t *req)
 {
     char* buf;
@@ -160,6 +175,11 @@ esp_err_t post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 esp_err_t get_handler(httpd_req_t *req) {
     if (strcmp(req->uri, "/submit") == 0) {
         httpd_resp_send(req, html_form, HTTPD_RESP_USE_STRLEN);
@@ -183,16 +203,18 @@ httpd_uri_t uri_post = {
     .user_ctx = NULL
 };
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 httpd_handle_t start_webserver(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = 4444;  // Define a porta do servidor para 4444
+    config.server_port = 4444;
 
     httpd_handle_t server = NULL;
     if (httpd_start(&server, &config) == ESP_OK) {
-        // Registra o manipulador para requisições GET
         httpd_register_uri_handler(server, &uri_get);
-
-        // Registra o manipulador para requisições POST
         httpd_register_uri_handler(server, &uri_post);
     } else {
         ESP_LOGI(TAG, "Erro ao iniciar o servidor web");
@@ -200,6 +222,11 @@ httpd_handle_t start_webserver(void) {
     return server;
 }
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 void stop_webserver(httpd_handle_t server) {
     ESP_LOGI(TAG, "PARANDO O WEBSERVER");
     while (sema5 == 1)
@@ -208,6 +235,11 @@ void stop_webserver(httpd_handle_t server) {
     }
 }
 
+/**
+ * @brief Main entry point of the program.
+ *
+ * Initializes the system, configures the network and microphone, and creates necessary tasks.
+ */
 esp_err_t wifi_init_softap(void)
 {
     ESP_LOGI(TAG, "wifi_init_softap");
@@ -236,7 +268,7 @@ esp_err_t wifi_init_softap(void)
 #ifdef CONFIG_ESP_WIFI_SOFTAP_SAE_SUPPORT
             .authmode = WIFI_AUTH_WPA3_PSK,
             .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-#else /* CONFIG_ESP_WIFI_SOFTAP_SAE_SUPPORT */
+#else
             .authmode = WIFI_AUTH_WPA2_PSK,
 #endif
             .pmf_cfg = {

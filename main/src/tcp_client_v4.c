@@ -38,31 +38,3 @@ int tcp_client(void)
     ESP_LOGI(TAG, "Successfully connected");
     return soc;
 }
-
-#if 0
-esp_err_t send_data()
-{
-    while (1) {
-
-
-        int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-        // Error occurred during receiving
-        if (len < 0) {
-            ESP_LOGE(TAG, "recv failed: errno %d", errno);
-            break;
-        }
-        // Data received
-        else {
-            rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-            ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
-            ESP_LOGI(TAG, "%s", rx_buffer);
-        }
-    }
-
-    if (sock != -1) {
-        ESP_LOGE(TAG, "Shutting down socket and restarting...");
-        shutdown(sock, 0);
-        close(sock);
-    }
-}
-#endif

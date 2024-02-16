@@ -30,6 +30,6 @@
 #define PASSWORD_LENGTH 64
 
 esp_err_t retrieve_credentials(char *ssid, char *password);
-void wifi_init_sta();
+esp_err_t wifi_init_sta();
 
 #endif

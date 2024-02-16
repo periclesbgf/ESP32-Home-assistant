@@ -34,8 +34,9 @@ int semaforo = 1;
  * Configures the I2S channel for audio recording. If there's a failure in configuration,
  * an error message is logged, and the program is terminated.
  */
-void init_microphone(void)
+esp_err_t init_microphone(void)
 {
+    ESP_LOGI(TAG, "Microphone initializing...");
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
     esp_err_t err = i2s_new_channel(&chan_cfg, NULL, &rx_handle);
     if (err != ESP_OK)
@@ -80,6 +81,8 @@ void init_microphone(void)
         ESP_LOGE(TAG, "Erro ao habilitar canal I2S: %d", err);
         abort();  // Encerra o programa em caso de erro
     }
+
+    return ESP_OK;
 }
 
 /**
@@ -351,42 +354,33 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-
     ESP_ERROR_CHECK(ret);
+
     ESP_LOGI(TAG, "Inicializando...");
 
-    esp_netif_t *net_if = NULL;
-    if(wifi_init_softap() == ESP_OK)
-    {
-        ESP_LOGI(TAG, "Hotspot inicializando");
-    }
-    else
+    if(wifi_init_softap() != ESP_OK)
     {
         ESP_LOGI(TAG, "Erro ao inicializar o Hotspot");
     }
+    ESP_LOGI(TAG, "wifi_init_softap finished");
 
-    ESP_LOGI(TAG, "Desligando o ponto de acesso WiFi...");
+    if(wifi_init_sta() != ESP_OK)
+    {
+        ESP_LOGI(TAG, "Erro ao Conectar no WIFI");
+    }
+    ESP_LOGI(TAG, "wifi_init_sta finished");
 
-    wifi_init_sta();
+    if(gpio_configure() != ESP_OK)
+    {
+        ESP_LOGI(TAG, "Erro ao configurar GPIOs");
+    }
+    ESP_LOGI(TAG, "gpio_configure finished");
 
-    ESP_LOGI(TAG, "main wifi_init_sta finished");
-
-    //esp_err_t status = ESP_FAIL;
-    ESP_LOGI(TAG, "main configure GPIOs... ");
-    gpio_configure();
-
-    gpio_set_level(GPIO_USER_GREEN_LED_PIN_3, LOW);
-    gpio_set_level(GPIO_USER_GREEN_LED_PIN_2, LOW);
-    gpio_set_level(GPIO_USER_GREEN_LED_PIN, LOW);
-    gpio_set_level(GPIO_USER_LED_PIN, LOW);
-    gpio_set_level(GPIO_USER_BLUE_LED_PIN, LOW);
-    gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
-
-    ESP_LOGI(TAG, "Inicializando Microfone");
-
-    init_microphone();
-
-    ESP_LOGI(TAG, "Microfone inicializado");
+    if(init_microphone() != ESP_OK)
+    {
+        ESP_LOGI(TAG, "Erro ao inicializar o microfone");
+    }
+    ESP_LOGI(TAG, "Microfone initialized successfully!");
 
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
