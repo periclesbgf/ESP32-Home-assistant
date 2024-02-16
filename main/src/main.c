@@ -25,7 +25,6 @@ i2s_chan_handle_t rx_handle = NULL;
 
 size_t bytes_read;
 const int WAVE_HEADER_SIZE = 16;
-SemaphoreHandle_t sema4;
 SemaphoreHandle_t sema_tcp;
 int semaforo = 1;
 
@@ -355,7 +354,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "Inicializando...");
-    //sema4 = xSemaphoreCreateBinary();
+
     esp_netif_t *net_if = NULL;
     if(wifi_init_softap() == ESP_OK)
     {
@@ -367,22 +366,11 @@ void app_main(void)
     }
 
     ESP_LOGI(TAG, "Desligando o ponto de acesso WiFi...");
-    
-#if 0
-    ESP_ERROR_CHECK(esp_wifi_disconnect());
-    ESP_ERROR_CHECK(esp_wifi_stop()); // Para o WiFi
-    ESP_ERROR_CHECK(esp_wifi_deinit()); // Desinicializa o driver do WiFi (opcional)
-#endif
-    ESP_LOGI(TAG, "Ponto de acesso desligado");
-    
 
     wifi_init_sta();
+
     ESP_LOGI(TAG, "main wifi_init_sta finished");
-    #if 0
-    vTaskDelay(pdMS_TO_TICKS(100));
-    sema_tcp = xSemaphoreCreateBinary();
-    xSemaphoreGive(sema4);
-    #endif
+
     //esp_err_t status = ESP_FAIL;
     ESP_LOGI(TAG, "main configure GPIOs... ");
     gpio_configure();
@@ -395,9 +383,7 @@ void app_main(void)
     gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
 
     ESP_LOGI(TAG, "Inicializando Microfone");
-#if 0
-    ESP_ERROR_CHECK(esp_netif_init());
-#endif
+
     init_microphone();
 
     ESP_LOGI(TAG, "Microfone inicializado");
@@ -405,5 +391,4 @@ void app_main(void)
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
-    //vTaskStartScheduler();
 }
