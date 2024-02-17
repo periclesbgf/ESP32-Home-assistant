@@ -28,6 +28,7 @@
 #define GPIO_USER_BLUE_LED_PIN GPIO_NUM_12
 #define GPIO_USER_RED_LED_PIN GPIO_NUM_4
 #define LUMINARIA GPIO_NUM_18
+#define LED_PIN 2
 
 #define HIGH 1
 #define LOW 0
