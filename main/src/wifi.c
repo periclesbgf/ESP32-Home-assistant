@@ -60,20 +60,22 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-esp_err_t retrieve_credentials(char *ssid, char *password) {
+esp_err_t retrieve_credentials(char *ssid, char *password, char *host_ip) {
 
     // Abre o namespace NVS
     nvs_handle_t nvs_handle;
     ESP_ERROR_CHECK(nvs_open("wifi_config", NVS_READONLY, &nvs_handle));
 
     // Recupera as credenciais do NVS
-    size_t ssid_size, password_size;
+    size_t ssid_size, password_size, host_ip_size;
     ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "ssid", NULL, &ssid_size));
     ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "password", NULL, &password_size));
+    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "hostip", NULL, &host_ip_size));
 
     if (ssid_size > 0 && password_size > 0) {
         ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "ssid", ssid, &ssid_size));
         ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "password", password, &password_size));
+        ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "hostip", host_ip, &host_ip_size));
     }
 
     // Fecha o namespace NVS
@@ -84,29 +86,18 @@ esp_err_t retrieve_credentials(char *ssid, char *password) {
 
 esp_err_t wifi_init_sta()
 {
-
     char ssid[SSID_LENGTH];
     char password[PASSWORD_LENGTH];
+    char host_ip[HOST_IP_LENGTH];
     ESP_LOGI(TAG, "wifi_init_sta Initializing WIFI");
-    retrieve_credentials(ssid, password);
-    ESP_LOGI(TAG, "wifi_init_sta finished. SSID: %s password: %s", ssid, password);
+    retrieve_credentials(ssid, password, host_ip);
+    ESP_LOGI(TAG, "wifi_init_sta finished. SSID: %s password: %s host_ip: %s", ssid, password, host_ip);
     s_wifi_event_group = xEventGroupCreate();
     ESP_LOGI(TAG, "wifi_init_sta after xEventGroupCreate");
-#if 0
-    ESP_ERROR_CHECK(esp_netif_init());
 
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    ESP_LOGI(TAG, "wifi_init_sta destroying default wifi netif");
-    esp_netif_destroy_default_wifi(esp_netif_get_default_netif());
-    ESP_LOGI(TAG, "wifi_init_sta after destroying default wifi netif");
-#endif
     esp_netif_create_default_wifi_sta();
     ESP_LOGI(TAG, "wifi_init_sta after creating default wifi sta");
-#if 0
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-#endif
+
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,

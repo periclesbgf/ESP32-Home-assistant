@@ -28,8 +28,9 @@
 
 #define SSID_LENGTH 32
 #define PASSWORD_LENGTH 64
+#define HOST_IP_LENGTH 64
 
-esp_err_t retrieve_credentials(char *ssid, char *password);
+esp_err_t retrieve_credentials(char *ssid, char *password, char *host_ip);
 esp_err_t wifi_init_sta();
 
 #endif

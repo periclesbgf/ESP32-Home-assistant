@@ -73,7 +73,9 @@ const char *html = "<!DOCTYPE html><html><body>"
                    "<label for=\"ssid\">SSID:</label><br>"
                    "<input type=\"text\" id=\"ssid\" name=\"ssid\"><br>"
                    "<label for=\"password\">Password:</label><br>"
-                   "<input type=\"password\" id=\"password\" name=\"password\"><br><br>"
+                   "<input type=\"password\" id=\"password\" name=\"password\"><br>"
+                   "<label for=\"hostip\">HOSTIP:</label><br>"
+                   "<input type=\"text\" id=\"hostip\" name=\"hostip\"><br><br>"
                    "<input type=\"submit\" value=\"Submit\">"
                    "</form>"
                    "</body></html>";
@@ -84,7 +86,10 @@ const char *html_form = "<!DOCTYPE html><html><body>"
                         "Nome da rede:<br>"
                         "<input type=\"text\" name=\"ssid\"><br>"
                         "Senha da rede:<br>"
-                        "<input type=\"password\" name=\"password\"><br><br>"
+                        "<input type=\"password\" name=\"password\"><br>"
+                        "<label for=\"hostip\">HOSTIP:</label><br>"
+                        "<input type=\"text\" id=\"hostip\" name=\"hostip\"><br><br>"
+                        "Host IP:<br>"
                         "<input type=\"submit\" value=\"Confirmar\">"
                         "</form>"
                         "</body></html>";
@@ -95,7 +100,7 @@ const char *html_form = "<!DOCTYPE html><html><body>"
  *
  * Initializes the system, configures the network and microphone, and creates necessary tasks.
  */
-void store_credentials(const char *ssid, const char *password) 
+void store_credentials(const char *ssid, const char *password, const char *host_ip)
 {
     // Abre o namespace NVS
     nvs_handle_t nvs_handle;
@@ -104,6 +109,7 @@ void store_credentials(const char *ssid, const char *password)
     // Armazena as credenciais no NVS
     ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "ssid", ssid));
     ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "password", password));
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "hostip", host_ip));
 
     // Fecha o namespace NVS
     nvs_commit(nvs_handle);
@@ -145,10 +151,12 @@ esp_err_t post_handler(httpd_req_t *req)
 
     char ssid[32] = {0};
     char password[64] = {0};
+    char host_ip[64] = {0};
 
     // Extrai os dados para as variáveis ssid e password
     httpd_query_key_value(buf, "ssid", ssid, sizeof(ssid));
     httpd_query_key_value(buf, "password", password, sizeof(password));
+    httpd_query_key_value(buf, "hostip", host_ip, sizeof(host_ip));
 
     // Decodifica a senha
     char decodedPassword[64] = {0}; // Certifique-se de que este array seja grande o suficiente para armazenar o resultado decodificado
@@ -156,10 +164,11 @@ esp_err_t post_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "SSID recebido: %s", ssid);
     ESP_LOGI(TAG, "Senha recebida: %s", decodedPassword);
+    ESP_LOGI(TAG, "Senha recebida: %s", host_ip);
 
-    store_credentials(ssid, decodedPassword);
+    store_credentials(ssid, decodedPassword, host_ip);
 
-    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s", ssid, password);
+    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s host_ip:%s", ssid, password, host_ip);
 
     sema5 = 1;
 

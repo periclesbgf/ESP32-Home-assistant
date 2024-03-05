@@ -88,8 +88,13 @@ void i2s_example_udp_stream_task(void *args)
     int addr_family = 0;
     int ip_protocol = 0;
 
+    char host_ip[HOST_IP_LENGTH];
+    ESP_LOGI(TAG, "wifi_init_sta Initializing WIFI");
+    retrieve_credentials(NULL, NULL, host_ip);
+    ESP_LOGI(TAG, "wifi_init_sta finished. host_ip: %s", host_ip);
+
     struct sockaddr_in dest_addr;
-    dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
+    dest_addr.sin_addr.s_addr = inet_addr(host_ip);
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = htons(PORT);
     addr_family = AF_INET;
@@ -106,7 +111,7 @@ void i2s_example_udp_stream_task(void *args)
     timeout.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
 
-    ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
+    ESP_LOGI(TAG, "Socket created, sending to %s:%d", host_ip, PORT);
 
     while (1)
     {
@@ -163,6 +168,11 @@ void i2s_example_udp_stream_task(void *args)
  */
 void i2s_example_tcp_stream_task(void *args)
 {
+    char host_ip[HOST_IP_LENGTH];
+    ESP_LOGI(TAG, "wifi_init_sta Initializing WIFI");
+    retrieve_credentials(NULL, NULL, host_ip);
+    ESP_LOGI(TAG, "wifi_init_sta finished. host_ip: %s", host_ip);
+
     vTaskDelay(10);
 
     while (1)
@@ -179,7 +189,7 @@ void i2s_example_tcp_stream_task(void *args)
             struct sockaddr_in server_address;
             server_address.sin_family = AF_INET;
             server_address.sin_port = htons(12446);  // Substitua pelo número da porta do seu servidor
-            inet_aton(HOST_IP_ADDR, &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
+            inet_aton(host_ip, &server_address.sin_addr);  // Substitua pelo endereço IP do seu servidor
 
             if (connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
             {
@@ -258,7 +268,6 @@ void tcp_server_task(void *pvParameters)
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(12345);  // Substitua pelo número da porta desejado
-
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         ESP_LOGE(TAG, "Erro ao vincular o socket TCP do servidor");

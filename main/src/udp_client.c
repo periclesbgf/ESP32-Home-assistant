@@ -27,7 +27,7 @@
 
 #define PORT 1234
 
-static const char *TAG = "example";
+static const char *TAG = "udp_client";
 static const char *payload = "Message from ESP32 ";
 
 
@@ -39,7 +39,6 @@ static void udp_client_task(void *pvParameters)
     int ip_protocol = 0;
 
     while (1) {
-
         struct sockaddr_in dest_addr;
         dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
         dest_addr.sin_family = AF_INET;
@@ -101,10 +100,3 @@ static void udp_client_task(void *pvParameters)
     }
     vTaskDelete(NULL);
 }
-
-// void app_main(void)
-// {
-
-
-//     xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
-// }
