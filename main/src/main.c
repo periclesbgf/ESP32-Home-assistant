@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "inmp441.h"
+#include "modelo_data.h"
 
 static const char *TAG = "HomeAssistant";
 

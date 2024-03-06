@@ -6,6 +6,7 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+#if 0
 #include <string.h>
 #include <sys/param.h>
 #include "freertos/FreeRTOS.h"
@@ -20,12 +21,6 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
-
-#define HOST_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
-#define HOST_IP_ADDR "192.168.1.10"
-
-
-#define PORT 1234
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
@@ -101,10 +96,4 @@ static void udp_client_task(void *pvParameters)
     }
     vTaskDelete(NULL);
 }
-
-// void app_main(void)
-// {
-
-
-//     xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 5, NULL);
-// }
+#endif
