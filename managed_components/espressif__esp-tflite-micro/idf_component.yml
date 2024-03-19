@@ -1,0 +1,17 @@
+dependencies:
+  espressif/esp-nn:
+    pre_release: true
+    version: ^1.0.0-rc1
+  idf:
+    version: '>=4.2'
+description: TensorFlow Lite Micro component for ESP-IDF
+documentation: https://github.com/espressif/tflite-micro-esp-examples#readme
+files:
+  exclude:
+  - scripts
+  - .gitlab-ci.yml
+  - .github
+issues: https://github.com/espressif/tflite-micro-esp-examples/issues
+repository: https://github.com/espressif/tflite-micro-esp-examples.git
+url: https://github.com/espressif/tflite-micro-esp-examples
+version: 1.2.0
