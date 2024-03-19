@@ -372,18 +372,14 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "gpio_configure finished");
 
-    aws_iot_demo_main(0,NULL);
-
-#if 0
     if(init_microphone() != ESP_OK)
     {
         ESP_LOGI(TAG, "Erro ao inicializar o microfone");
     }
     ESP_LOGI(TAG, "Microfone initialized successfully!");
 
-
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
-#endif
-}
+
+}g
