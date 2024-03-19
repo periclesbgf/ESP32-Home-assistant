@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "inmp441.h"
+ /*"core_mqtt_serializer.h"*/
 
 static const char *TAG = "HomeAssistant";
 
@@ -10,6 +11,8 @@ size_t bytes_read;
 const int WAVE_HEADER_SIZE = 16;
 SemaphoreHandle_t sema_tcp;
 int semaforo = 1;
+
+int aws_iot_demo_main( int argc, char ** argv );
 
 /**
  * @brief Initializes the microphone for recording.
@@ -341,6 +344,7 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Inicializando...");
 
+
     if(wifi_init_softap() != ESP_OK)
     {
         ESP_LOGI(TAG, "Erro ao inicializar o Hotspot");
@@ -359,13 +363,18 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "gpio_configure finished");
 
+    aws_iot_demo_main(0,NULL);
+
+#if 0
     if(init_microphone() != ESP_OK)
     {
         ESP_LOGI(TAG, "Erro ao inicializar o microfone");
     }
     ESP_LOGI(TAG, "Microfone initialized successfully!");
 
+
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
+#endif
 }
