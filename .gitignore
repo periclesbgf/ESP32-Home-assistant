@@ -5,3 +5,4 @@ sdkconfig.old
 .devcontainer
 components/
 wifiid.txt
+main/certs/
