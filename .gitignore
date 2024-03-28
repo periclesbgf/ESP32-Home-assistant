@@ -6,3 +6,7 @@ sdkconfig.old
 components/
 wifiid.txt
 main/certs/
+.DS_Store
+main/.DS_Store
+dependencies.lock
+esp-aws-iot/
