@@ -18,7 +18,7 @@
 #include <driver/gpio.h>
 #include <dht11.h>
 #include <rom/ets_sys.h>
-#include "driver/uart.h"
+
 
 #define GPIO_DHT11_PIN     GPIO_NUM_5
 #define GPIO_USER_LED_PIN  GPIO_NUM_2

@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "utils.h"
 #include "inmp441.h"
- /*"core_mqtt_serializer.h"*/
+#include "model_data.h"
+#include "tf_utils.h"
+
 
 static const char *TAG = "HomeAssistant";
 
@@ -79,43 +81,8 @@ esp_err_t init_microphone(void)
  *
  * @param args Arguments for the task (not used).
  */
-void i2s_example_udp_stream_task(void *args)
+void get_audio_samples(void *args)
 {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0)
-    {
-        ESP_LOGE(TAG, "Erro ao criar o socket UDP");
-        vTaskDelete(NULL);
-    }
-
-    int addr_family = 0;
-    int ip_protocol = 0;
-
-    char host_ip[HOST_IP_LENGTH];
-    ESP_LOGI(TAG, "wifi_init_sta Initializing WIFI");
-    retrieve_credentials(NULL, NULL, host_ip);
-    ESP_LOGI(TAG, "wifi_init_sta finished. host_ip: %s", host_ip);
-
-    struct sockaddr_in dest_addr;
-    dest_addr.sin_addr.s_addr = inet_addr(host_ip);
-    dest_addr.sin_family = AF_INET;
-    dest_addr.sin_port = htons(PORT);
-    addr_family = AF_INET;
-    ip_protocol = IPPROTO_IP;
-
-    sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
-    if (sock < 0) {
-        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-        vTaskDelete(NULL);
-    }
-
-    struct timeval timeout;
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
-
-    ESP_LOGI(TAG, "Socket created, sending to %s:%d", host_ip, PORT);
-
     while (1)
     {
         if (semaforo == 1)
@@ -137,15 +104,6 @@ void i2s_example_udp_stream_task(void *args)
                     ESP_LOGE(TAG, "Erro ao ler dados do microfone");
                     break;
                 }
-
-                ssize_t sent_bytes = sendto(sock, r_buf, r_bytes, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-                if (sent_bytes < 0)
-                {
-                    ESP_LOGE(TAG, "Erro ao enviar dados para o servidor");
-                    break;
-                }
-
-                bytes_sent += sent_bytes;
                 vTaskDelay(pdMS_TO_TICKS(6));
             }
             vTaskDelay(10);
@@ -378,7 +336,9 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "Microfone initialized successfully!");
 
-    xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
-    xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
+    imprime();
+
+    xTaskCreate(get_audio_samples, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
+    //xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
 }

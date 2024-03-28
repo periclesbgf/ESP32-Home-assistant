@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2023
  *
  */
-#include <gpio.h>
+#include <include/gpio.h>
 #include <esp_log.h>
 
 static const char *tag = "GPIO";
