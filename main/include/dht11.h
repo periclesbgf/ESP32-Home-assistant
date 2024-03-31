@@ -11,7 +11,7 @@
 #ifndef _DHT11_H_
 #define _DHT11_H_
 
-#include <gpio.h>
+#include <gpioo.h>
 #include <esp_err.h>
 
 #define DHT11_TIMEOUT 80

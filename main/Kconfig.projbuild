@@ -2,7 +2,7 @@ menu "Example Configuration"
 
     config ESP_WIFI_SSID
         string "WiFi SSID"
-        default "myssid"
+        default "testando"
         help
             SSID (network name) for the example to connect to.
 

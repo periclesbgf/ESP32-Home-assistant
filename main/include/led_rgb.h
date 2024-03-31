@@ -12,7 +12,7 @@
 #ifndef _LED_RGB_H_
 #define _LED_RGB_H_
 
-#include <gpio.h>
+#include <gpioo.h>
 
 typedef struct led_rgb_t
 {

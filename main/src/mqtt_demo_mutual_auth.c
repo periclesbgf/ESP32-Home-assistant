@@ -1,3 +1,4 @@
+#if 0
 /*
  * AWS IoT Device SDK for Embedded C 202108.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
@@ -1755,3 +1756,4 @@ int aws_iot_demo_main( int argc,
 }
 
 /*-----------------------------------------------------------*/
+#endif

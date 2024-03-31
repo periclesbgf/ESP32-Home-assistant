@@ -11,7 +11,7 @@
 #ifndef _INMP441_H_
 #define _INMP441_H_
 
-#include <gpio.h>
+#include <gpioo.h>
 #include <esp_err.h>
 #include <inttypes.h>
 #include <stdio.h>

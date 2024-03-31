@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include "utils.h"
 #include "inmp441.h"
+#include "voice.h"
  /*"core_mqtt_serializer.h"*/
 
 static const char *TAG = "HomeAssistant";
 
 i2s_chan_handle_t rx_handle = NULL;
+
+i2s_chan_handle_t tx_chan = NULL;
 
 size_t bytes_read;
 const int WAVE_HEADER_SIZE = 16;
@@ -13,6 +16,38 @@ SemaphoreHandle_t sema_tcp;
 int semaforo = 1;
 
 int aws_iot_demo_main( int argc, char ** argv );
+
+
+esp_err_t init_subwoofer(void) {
+    ESP_LOGI("voice", "init_subwoofer");
+    i2s_chan_config_t tx_chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_1, I2S_ROLE_MASTER);
+    ESP_ERROR_CHECK(i2s_new_channel(&tx_chan_cfg, &tx_chan, NULL));
+
+
+    i2s_std_config_t tx_std_cfg = {
+            .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(32000),
+            .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT,
+                                                        I2S_SLOT_MODE_MONO),
+
+            .gpio_cfg = {
+                    .mclk = I2S_GPIO_UNUSED,    // some codecs may require mclk signal, this example doesn't need it
+                    .bclk = EXAMPLE_STD_BCLK_IO1,
+                    .ws   = EXAMPLE_STD_WS_IO1,
+                    .dout = EXAMPLE_STD_DOUT_IO1,
+                    .din  = EXAMPLE_STD_DIN_IO1,
+                    .invert_flags = {
+                            .mclk_inv = false,
+                            .bclk_inv = false,
+                            .ws_inv   = false,
+                    },
+            },
+    };
+    ESP_ERROR_CHECK(i2s_channel_init_std_mode(tx_chan, &tx_std_cfg));
+    ESP_ERROR_CHECK(i2s_channel_enable(tx_chan));
+
+    return ESP_OK;
+}
+
 
 /**
  * @brief Initializes the microphone for recording.
@@ -23,7 +58,7 @@ int aws_iot_demo_main( int argc, char ** argv );
 esp_err_t init_microphone(void)
 {
     ESP_LOGI(TAG, "Microphone initializing...");
-    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
     esp_err_t err = i2s_new_channel(&chan_cfg, NULL, &rx_handle);
     if (err != ESP_OK)
     {
@@ -305,31 +340,45 @@ void tcp_server_task(void *pvParameters)
 
         while ((bytes_received = recv(client_sock, buffer, sizeof(buffer), 0)) > 0)
         {
+            size_t w_bytes = 0;
             buffer[bytes_received] = '\0';
-            ESP_LOGI(TAG, "Recebido: %s", buffer);
+            
             if (strcmp(buffer, "eden") == 0)
             {
                 semaforo = 2;
                 vTaskDelay(10);
+                ESP_LOGI(TAG, "Recebido: %s", buffer);
             }
             else if(strcmp(buffer, "ll1") == 0)
             {
                 gpio_set_level(GPIO_USER_RED_LED_PIN, HIGH);
+                ESP_LOGI(TAG, "Recebido: %s", buffer);
             }
             else if(strcmp(buffer, "dl1") == 0)
             {
                 gpio_set_level(GPIO_USER_RED_LED_PIN, LOW);
+                ESP_LOGI(TAG, "Recebido: %s", buffer);
             }
             else if(strcmp(buffer, "ll2") == 0)
             {
                 gpio_set_level(LUMINARIA, HIGH);
+                ESP_LOGI(TAG, "Recebido: %s", buffer);
             }
             else if(strcmp(buffer, "dl2") == 0)
             {
                 gpio_set_level(LUMINARIA, LOW);
+                ESP_LOGI(TAG, "Recebido: %s", buffer);
+            }
+            else
+            {
+                if (i2s_channel_write(tx_chan, buffer, bytes_received, &w_bytes, 1000) == ESP_OK) {
+                    printf("Write Task: i2s write %d bytes\n", w_bytes);
+                } else {
+                    printf("Write Task: i2s write failed\n");
+                }
             }
         }
-        vTaskDelay(200);
+        //vTaskDelay(200);
 
         close(client_sock);
         ESP_LOGI(TAG, "Cliente desconectado");
@@ -378,7 +427,13 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "Microfone initialized successfully!");
 
+    if(init_subwoofer() != ESP_OK)
+    {
+        ESP_LOGI(TAG, "Erro ao inicializar o subwoofer");
+    }
+
+    //xTaskCreate(i2s_subwoofer_write, "i2s_subwoofer_write", 4096, NULL, 5, NULL);
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
-    xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
+    xTaskCreate(tcp_server_task, "tcp_server_task", 9216, NULL, 5, NULL);
 }

@@ -17,7 +17,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
-#include <gpio.h>
+#include <gpioo.h>
 #include <dht11.h>
 #include <led_rgb.h>
 #include <inmp441.h>
