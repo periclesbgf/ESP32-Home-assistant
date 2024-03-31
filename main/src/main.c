@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "inmp441.h"
+#include "mqtt_client_eden.h"
  /*"core_mqtt_serializer.h"*/
 
 static const char *TAG = "HomeAssistant";
@@ -365,7 +366,7 @@ void app_main(void)
         ESP_LOGI(TAG, "Erro ao Conectar no WIFI");
     }
     ESP_LOGI(TAG, "wifi_init_sta finished");
-
+#if 0
     if(gpio_configure() != ESP_OK)
     {
         ESP_LOGI(TAG, "Erro ao configurar GPIOs");
@@ -377,6 +378,10 @@ void app_main(void)
         ESP_LOGI(TAG, "Erro ao inicializar o microfone");
     }
     ESP_LOGI(TAG, "Microfone initialized successfully!");
+#endif
+
+    mqtt_app_start();
+    mqtt_publish(NULL);
 
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
