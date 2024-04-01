@@ -2,7 +2,6 @@
 #include "utils.h"
 #include "inmp441.h"
 #include "mqtt_client_eden.h"
- /*"core_mqtt_serializer.h"*/
 
 static const char *TAG = "HomeAssistant";
 
@@ -337,6 +336,48 @@ void tcp_server_task(void *pvParameters)
     }
 }
 
+
+esp_err_t initial_tcp_client_task(void) {
+
+    char host_ip[HOST_IP_LENGTH];
+    ESP_LOGI(TAG, "Retrieving credentials...");
+    retrieve_credentials(NULL, NULL, host_ip);
+    ESP_LOGI(TAG, "Credentials Retrieved. host_ip: %s", host_ip);
+
+    struct sockaddr_in dest_addr;
+    dest_addr.sin_addr.s_addr = inet_addr(host_ip);
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(12340);
+
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+        return ESP_FAIL;
+    }
+    int err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if (err != 0) {
+        ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
+        return ESP_FAIL;
+    }
+    ESP_LOGI(TAG, "Successfully connected");
+
+    char *hello_msg = "Hello from ESP32!";
+    send(sock, hello_msg, strlen(hello_msg), 0);
+
+    char rx_buffer[128];
+
+    int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+    if (len > 0) {
+        rx_buffer[len] = 0; // Null-terminate a string recebida
+        printf("Received message: %s\n", rx_buffer);
+    }
+
+    shutdown(sock, 0);
+    close(sock);
+    //vTaskDelete(NULL);
+    return ESP_OK;
+}
+
 /**
  * @brief Main entry point of the program.
  *
@@ -382,7 +423,11 @@ void app_main(void)
 
     //mqtt_app_start();
     //mqtt_publish(NULL);
-
+    if (initial_tcp_client_task() != ESP_OK){
+        ESP_LOGI(TAG, "Erro ao criar a tarefa do cliente TCP");
+    }
+    ESP_LOGI(TAG, "initial_tcp_client_task finished");
+    vTaskDelay(10);
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
