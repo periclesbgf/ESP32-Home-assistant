@@ -1,4 +1,5 @@
 #include "mqtt_client_eden.h"
+#include "gpioo.h"
 
 static const char *TAG = "MQTT";
 
@@ -13,6 +14,7 @@ void log_error_if_nonzero(const char *message, int error_code)
     }
 }
 
+
 void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
@@ -21,6 +23,7 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        esp_mqtt_client_subscribe(client, "topic/esp32/pub", 0);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -36,18 +39,16 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
         break;
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        printf("DATA=%.*s\r\n", event->data_len, event->data);
+        printf("Received message: TOPIC=%.*s DATA=%.*s\r\n", event->topic_len, event->topic, event->data_len, event->data);
+        // Chamar a função turn_led aqui
+        char* message = malloc(event->data_len + 1); // Aloca memória para armazenar a mensagem recebida
+        strncpy(message, event->data, event->data_len); // Copia os dados da mensagem para a variável
+        message[event->data_len] = '\0'; // Adiciona o terminador de string
+        turn_led(message); // Chama a função para tratar a mensagem
+        free(message); // Libera a memória alocada
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-            log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
-            log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
-            ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-
-        }
         break;
     default:
         ESP_LOGI(TAG, "Other event id:%d", event->event_id);
@@ -73,12 +74,20 @@ void mqtt_app_start(void)
 }
 
 void mqtt_publish(void *params){
-    msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
+    msg_id = esp_mqtt_client_subscribe(client, "topic/esp32/pub", 0);
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-    msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "Test was send",0 ,0 ,0);
+    msg_id = esp_mqtt_client_publish(client, "topic/esp32/pub", "Test was send",0 ,0 ,0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
-    msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos0");
-    ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+    //msg_id = esp_mqtt_client_unsubscribe(client, "topic/esp32/pub");
+    //ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+}
+
+void turn_led(char *data){
+    if(strcmp(data, "on") == 0){
+        gpio_set_level(LUMINARIA, 1);
+    }else if(strcmp(data, "off") == 0){
+        gpio_set_level(LUMINARIA, 0);
+    }
 }

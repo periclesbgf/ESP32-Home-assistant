@@ -476,8 +476,9 @@ void app_main(void)
 
     //xTaskCreate(i2s_subwoofer_write, "i2s_subwoofer_write", 4096, NULL, 5, NULL);
 
-    //mqtt_app_start();
+    mqtt_app_start();
     //mqtt_publish(NULL);
+
     if (initial_tcp_client_task() != ESP_OK){
         ESP_LOGI(TAG, "Erro ao criar a tarefa do cliente TCP");
     }
@@ -486,4 +487,5 @@ void app_main(void)
     xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
     xTaskCreate(tcp_server_task, "tcp_server_task", 9216, NULL, 5, NULL);
+
 }
