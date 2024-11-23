@@ -12,16 +12,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
+// WARNING: Users of TensorFlow Lite should not include this file directly, but
+// should instead include "third_party/tensorflow/lite/c/c_api_types.h".
+// Only the TensorFlow Lite implementation itself should include this file
+// directly.
 
 /// This file declares types used by the pure C inference API defined in
 /// c_api.h, some of which are also used in the C++ and C kernel and interpreter
 /// APIs.
-
-// WARNING: Users of TensorFlow Lite should not include this file directly,
-// but should instead include
-// "third_party/tensorflow/lite/c/c_api_types.h".
-// Only the TensorFlow Lite implementation itself should include this
-// file directly.
+///
+// clang-format off
+// NOLINTBEGIN(whitespace/line_length)
+/// \note Users of TensorFlow Lite should use
+/// \code
+/// #include "tensorflow/lite/c/c_api_types.h"
+/// \endcode
+/// to access the APIs documented on this page.
+// NOLINTEND(whitespace/line_length)
+// clang-format on
 
 // IWYU pragma: private, include "third_party/tensorflow/lite/c/c_api_types.h"
 
@@ -34,9 +42,13 @@ limitations under the License.
 extern "C" {
 #endif
 
-/** \addtogroup c_api_types tensorflow/lite/c/c_api_types.h
+// clang-format off
+// NOLINTBEGIN(whitespace/line_length)
+/** \defgroup c_api_types lite/c/c_api_types.h
  *  @{
  */
+// NOLINTEND(whitespace/line_length)
+// clang-format on
 
 // Define TFL_CAPI_EXPORT macro to export a function properly with a shared
 // library.
@@ -98,9 +110,17 @@ typedef enum TfLiteStatus {
   // TODO(b/250636993): Cancellation triggered by `SetCancellationFunction`
   // should also return this status code.
   kTfLiteCancelled = 8,
+
+  // This status is returned by Prepare when the output shape cannot be
+  // determined but the size of the output tensor is known. For example, the
+  // output of reshape is always the same size as the input. This means that
+  // such ops may be
+  // done in place.
+  kTfLiteOutputShapeNotKnown = 9,
 } TfLiteStatus;
 
 /// Types supported by tensor
+// LINT.IfChange
 typedef enum {
   kTfLiteNoType = 0,
   kTfLiteFloat32 = 1,
@@ -121,14 +141,15 @@ typedef enum {
   kTfLiteUInt32 = 16,
   kTfLiteUInt16 = 17,
   kTfLiteInt4 = 18,
+  kTfLiteBFloat16 = 19,
 } TfLiteType;
+// LINT.ThenChange(//tensorflow/lite/profiling/proto/model_runtime_info.proto:EdgeDataType)
 
-/// Legacy. Will be deprecated in favor of TfLiteAffineQuantization.
+/// Legacy. Will be deprecated in favor of `TfLiteAffineQuantization`.
 /// If per-layer quantization is specified this field will still be populated in
-/// addition to TfLiteAffineQuantization.
+/// addition to `TfLiteAffineQuantization`.
 /// Parameters for asymmetric quantization. Quantized values can be converted
-/// back to float using:
-///     real_value = scale * (quantized_value - zero_point)
+/// back to float using: `real_value = scale * (quantized_value - zero_point)`
 typedef struct TfLiteQuantizationParams {
   float scale;
   int32_t zero_point;
@@ -156,6 +177,7 @@ typedef struct TfLiteDelegate TfLiteDelegate;
 /// This is an abstract type that is intended to have the same
 /// role as TfLiteDelegate, but without exposing the implementation
 /// details of how delegates are implemented.
+///
 /// WARNING: This is an experimental type and subject to change.
 typedef struct TfLiteOpaqueDelegateStruct TfLiteOpaqueDelegateStruct;
 
@@ -163,6 +185,7 @@ typedef struct TfLiteOpaqueDelegateStruct TfLiteOpaqueDelegateStruct;
 /// TfLiteDelegate; allows delegation of nodes to alternative backends.
 /// For TF Lite in Play Services, this is an opaque type,
 /// but for regular TF Lite, this is just a typedef for TfLiteDelegate.
+///
 /// WARNING: This is an experimental type and subject to change.
 #if TFLITE_WITH_STABLE_ABI || TFLITE_USE_OPAQUE_DELEGATE
 typedef TfLiteOpaqueDelegateStruct TfLiteOpaqueDelegate;

@@ -23,6 +23,7 @@ limitations under the License.
 #include <new>
 #include <type_traits>
 
+#include "tensorflow/compiler/mlir/lite/core/api/error_reporter.h"
 #include "tensorflow/lite/core/api/error_reporter.h"
 #include "tensorflow/lite/core/c/common.h"
 #include "tensorflow/lite/schema/schema_generated.h"
@@ -434,6 +435,26 @@ TfLiteStatus ParseStablehloGather(const Operator* op,
                                   ErrorReporter* error_reporter,
                                   BuiltinDataAllocator* allocator,
                                   void** builtin_data);
+
+TfLiteStatus ParseStablehloReduceWindow(const Operator* op,
+                                        ErrorReporter* error_reporter,
+                                        BuiltinDataAllocator* allocator,
+                                        void** builtin_data);
+
+TfLiteStatus ParseStablehloPad(const Operator* op,
+                               ErrorReporter* error_reporter,
+                               BuiltinDataAllocator* allocator,
+                               void** builtin_data);
+
+TfLiteStatus ParseStablehloComposite(const Operator* op,
+                                     ErrorReporter* error_reporter,
+                                     BuiltinDataAllocator* allocator,
+                                     void** builtin_data);
+
+TfLiteStatus ParseStablehloShiftLeft(const Operator* op,
+                                     ErrorReporter* error_reporter,
+                                     BuiltinDataAllocator* allocator,
+                                     void** builtin_data);
 
 }  // namespace tflite
 

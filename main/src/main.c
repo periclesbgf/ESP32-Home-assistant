@@ -25,7 +25,7 @@ esp_err_t init_subwoofer(void) {
 
 
     i2s_std_config_t tx_std_cfg = {
-            .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(32000),
+            .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(25000),
             .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT,
                                                         I2S_SLOT_MODE_MONO),
 
@@ -342,7 +342,7 @@ void tcp_server_task(void *pvParameters)
         {
             size_t w_bytes = 0;
             buffer[bytes_received] = '\0';
-            
+
             if (strcmp(buffer, "eden") == 0)
             {
                 semaforo = 2;
@@ -463,29 +463,29 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "gpio_configure finished");
 
-    if(init_microphone() != ESP_OK)
-    {
-        ESP_LOGI(TAG, "Erro ao inicializar o microfone");
-    }
-    ESP_LOGI(TAG, "Microfone initialized successfully!");
+    // if(init_microphone() != ESP_OK)
+    // {
+    //     ESP_LOGI(TAG, "Erro ao inicializar o microfone");
+    // }
+    // ESP_LOGI(TAG, "Microfone initialized successfully!");
 
-    if(init_subwoofer() != ESP_OK)
-    {
-        ESP_LOGI(TAG, "Erro ao inicializar o subwoofer");
-    }
+    // if(init_subwoofer() != ESP_OK)
+    // {
+    //     ESP_LOGI(TAG, "Erro ao inicializar o subwoofer");
+    // }
 
     //xTaskCreate(i2s_subwoofer_write, "i2s_subwoofer_write", 4096, NULL, 5, NULL);
 
     mqtt_app_start();
-    //mqtt_publish(NULL);
+    mqtt_publish(NULL);
 
-    if (initial_tcp_client_task() != ESP_OK){
-        ESP_LOGI(TAG, "Erro ao criar a tarefa do cliente TCP");
-    }
+    // if (initial_tcp_client_task() != ESP_OK){
+    //     ESP_LOGI(TAG, "Erro ao criar a tarefa do cliente TCP");
+    // }
     ESP_LOGI(TAG, "initial_tcp_client_task finished");
-    vTaskDelay(10);
-    xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
-    xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
-    xTaskCreate(tcp_server_task, "tcp_server_task", 9216, NULL, 5, NULL);
+    //vTaskDelay(10);
+    //xTaskCreate(i2s_example_udp_stream_task, "i2s_example_udp_stream_task", 7168, NULL, 5, NULL);
+    //xTaskCreate(i2s_example_tcp_stream_task, "i2s_example_tcp_stream_task", 7168, NULL, 5, NULL);
+    //xTaskCreate(tcp_server_task, "tcp_server_task", 9216, NULL, 5, NULL);
 
 }

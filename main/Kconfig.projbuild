@@ -33,7 +33,7 @@ menu "Example Configuration"
 
     config ADRESS_URI
         string "Endpoint of the MQTT broker to connect to"
-        default "mqtts://a34ypir054ngjb-ats.iot.us-east-2.amazonaws.com:8883"
+        default ""
         help
             This example can be run with any MQTT broker, that supports server authentication. 
 

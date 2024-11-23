@@ -6,3 +6,4 @@ sdkconfig.old
 components/
 wifiid.txt
 main/certs/
+managed_components/*

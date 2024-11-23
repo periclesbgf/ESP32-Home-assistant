@@ -17,13 +17,13 @@ void log_error_if_nonzero(const char *message, int error_code)
 
 void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
+    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        esp_mqtt_client_subscribe(client, "topic/esp32/pub", 0);
+        esp_mqtt_client_subscribe(client, "luminaria/debug", 0);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -74,11 +74,11 @@ void mqtt_app_start(void)
 }
 
 void mqtt_publish(void *params){
-    msg_id = esp_mqtt_client_subscribe(client, "topic/esp32/pub", 0);
+    msg_id = esp_mqtt_client_subscribe(client, "luminaria/debug", 0);
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-    msg_id = esp_mqtt_client_publish(client, "topic/esp32/pub", "Test was send",0 ,0 ,0);
-    ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+    // msg_id = esp_mqtt_client_publish(client, "luminaria/debug", "Test was send",0 ,0 ,0);
+    // ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
     //msg_id = esp_mqtt_client_unsubscribe(client, "topic/esp32/pub");
     //ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
@@ -89,5 +89,8 @@ void turn_led(char *data){
         gpio_set_level(LUMINARIA, 1);
     }else if(strcmp(data, "off") == 0){
         gpio_set_level(LUMINARIA, 0);
+        gpio_set_level(GPIO_USER_GREEN_LED_PIN, 0);
+        gpio_set_level(GPIO_USER_LED_PIN, 0);
+        gpio_set_level(GPIO_USER_RED_LED_PIN, 0);
     }
 }

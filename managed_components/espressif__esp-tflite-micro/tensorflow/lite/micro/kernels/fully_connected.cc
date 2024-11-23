@@ -1,4 +1,4 @@
-/* Copyright 2022 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2024 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,13 +26,14 @@ limitations under the License.
 namespace tflite {
 namespace {
 
-void* Init(TfLiteContext* context, const char* buffer, size_t length) {
+void* FullyConnectedInit(TfLiteContext* context, const char* buffer,
+                         size_t length) {
   TFLITE_DCHECK(context->AllocatePersistentBuffer != nullptr);
   return context->AllocatePersistentBuffer(context,
                                            sizeof(OpDataFullyConnected));
 }
 
-TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
+TfLiteStatus FullyConnectedPrepare(TfLiteContext* context, TfLiteNode* node) {
   MicroContext* micro_context = GetMicroContext(context);
 
   TFLITE_DCHECK(node->user_data != nullptr);
@@ -87,7 +88,7 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   return kTfLiteOk;
 }
 
-TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
+TfLiteStatus FullyConnectedEval(TfLiteContext* context, TfLiteNode* node) {
   TFLITE_DCHECK(node->builtin_data != nullptr);
   const auto* params =
       static_cast<const TfLiteFullyConnectedParams*>(node->builtin_data);
@@ -143,16 +144,29 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
           break;
         }
         case kTfLiteInt8: {
-          tflite::reference_integer_ops::FullyConnected(
-              FullyConnectedParamsQuantized(data),
-              tflite::micro::GetTensorShape(input),
-              tflite::micro::GetTensorData<int8_t>(input),
-              tflite::micro::GetTensorShape(filter),
-              tflite::micro::GetTensorData<int8_t>(filter),
-              tflite::micro::GetTensorShape(bias),
-              tflite::micro::GetOptionalTensorData<int32_t>(bias),
-              tflite::micro::GetTensorShape(output),
-              tflite::micro::GetTensorData<int8_t>(output));
+          data.is_per_channel
+              ? tflite::reference_integer_ops::FullyConnectedPerChannel(
+                    FullyConnectedParamsQuantized(data),
+                    data.per_channel_output_multiplier,
+                    reinterpret_cast<const int*>(data.per_channel_output_shift),
+                    tflite::micro::GetTensorShape(input),
+                    tflite::micro::GetTensorData<int8_t>(input),
+                    tflite::micro::GetTensorShape(filter),
+                    tflite::micro::GetTensorData<int8_t>(filter),
+                    tflite::micro::GetTensorShape(bias),
+                    tflite::micro::GetOptionalTensorData<int32_t>(bias),
+                    tflite::micro::GetTensorShape(output),
+                    tflite::micro::GetTensorData<int8_t>(output))
+              : tflite::reference_integer_ops::FullyConnected(
+                    FullyConnectedParamsQuantized(data),
+                    tflite::micro::GetTensorShape(input),
+                    tflite::micro::GetTensorData<int8_t>(input),
+                    tflite::micro::GetTensorShape(filter),
+                    tflite::micro::GetTensorData<int8_t>(filter),
+                    tflite::micro::GetTensorShape(bias),
+                    tflite::micro::GetOptionalTensorData<int32_t>(bias),
+                    tflite::micro::GetTensorShape(output),
+                    tflite::micro::GetTensorData<int8_t>(output));
           break;
         }
         default: {
@@ -200,11 +214,12 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
 }  // namespace
 
 TFLMRegistration Register_FULLY_CONNECTED() {
-  return tflite::micro::RegisterOp(Init, Prepare, Eval);
+  return tflite::micro::RegisterOp(FullyConnectedInit, FullyConnectedPrepare,
+                                   FullyConnectedEval);
 }
 
 TFLMInferenceRegistration RegisterInference_FULLY_CONNECTED() {
-  return tflite::micro::RegisterOp(Eval);
+  return tflite::micro::RegisterOp(FullyConnectedEval);
 }
 
 }  // namespace tflite
